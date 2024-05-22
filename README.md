@@ -1,3 +1,10 @@
+![sXolar Logo](sxolar.png)
+
+
+![Build](https://github.com/JWKennington/sxolar/actions/workflows/build.yml/badge.svg)
+[![CodeFactor](https://www.codefactor.io/repository/github/jwkennington/sxolar/badge)](https://www.codefactor.io/repository/github/jwkennington/sxolar)
+[![codecov](https://codecov.io/gh/JWKennington/sxolar/graph/badge.svg?token=s3uaJfzV0q)](https://codecov.io/gh/JWKennington/sxolar)
+
 # Scholar's tools for working with Arxiv
 
 This repository contains a collection of tools for working with Arxiv. The tools are written in Python and are designed
