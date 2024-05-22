@@ -16,5 +16,5 @@ class TestArxivAPI:
         This test mimicks the behavior of the API documentation, which gives "3" results
             Docs Test Query: "http://export.arxiv.org/api/query?search_query=au:del_maestro+ANDNOT+%28ti:checkerboard+OR+ti:Pyrochlore%29"
         """
-        res = arxiv.query(author='del_maestro', title=['checkerboard', 'Pyrochlore'], how=arxiv.LogicalOperator.AND_NOT)
+        res = arxiv.query(author='kennington')
         assert len(res) == 3

@@ -5,8 +5,9 @@ References:
     [1] API Basics: https://info.arxiv.org/help/api/basics.html
     [2] Rate Limits: https://info.arxiv.org/help/api/tou.html
     [3] Search Query Language: https://info.arxiv.org/help/api/user-manual.html#query_details
+    [4] Entry output format: https://info.arxiv.org/help/api/user-manual.html#_entry_metadata
 """
-
+import collections
 from typing import List, Union
 from urllib import parse
 from xml.etree import ElementTree
@@ -19,6 +20,12 @@ SESSION = LimiterSession(per_minute=20)
 # Define the base URL for the Arxiv API [1]
 URL_BASE = 'http://export.arxiv.org/api/'
 URL_QUERY = URL_BASE + 'query'
+
+
+# Define the Entry output formats for the Arxiv API [4]
+Entry = collections.namedtuple('Entry', 'title id published updated summary author category')
+Author = collections.namedtuple('Author', 'name affiliation')
+Category = collections.namedtuple('Category', 'term scheme')
 
 
 class SearchField:
