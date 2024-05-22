@@ -1,6 +1,5 @@
 ![sXolar Logo](sxolar.png)
 
-
 ![Build](https://github.com/JWKennington/sxolar/actions/workflows/build.yml/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/jwkennington/sxolar/badge)](https://www.codefactor.io/repository/github/jwkennington/sxolar)
 [![codecov](https://codecov.io/gh/JWKennington/sxolar/graph/badge.svg?token=s3uaJfzV0q)](https://codecov.io/gh/JWKennington/sxolar)
@@ -17,3 +16,15 @@ the [Arxiv API](https://arxiv.org/help/api/index), with a simpler interface and 
 
 Ultimately, the goal of this project is to provide a set of tools that can be used to build a personalized search engine
 for academic papers, with the ability to search, download, and explore the network of citations between papers.
+
+## Installation
+
+To install the package, you can use pip:
+
+```bash
+pip install sxolar
+```
+
+## Acknowledgements
+
+Thank you to arXiv for use of its open access interoperability.
