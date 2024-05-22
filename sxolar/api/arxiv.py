@@ -67,6 +67,8 @@ def get_and_parse(url: str, params: dict) -> dict:
     # Parse the response
     root = ElementTree.fromstring(response.text)
 
+    # TODO finish parsing response into a list of named tuples if no errors, otherwise raise the error
+
     # Return the parsed response
     return root
 
