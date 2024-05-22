@@ -10,3 +10,4 @@ dependencies:
   - pytest-mock
   - pyyaml
   - requests
+  - requests-ratelimiter
