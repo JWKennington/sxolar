@@ -10,6 +10,7 @@ References:
 import collections
 from typing import List, Union
 from urllib import parse
+from defusedxml import ElementTree as SecureElementTree
 from xml.etree import ElementTree
 
 from requests_ratelimiter import LimiterSession
@@ -126,8 +127,8 @@ def get_and_parse(url: str, params: dict) -> List[Entry]:
     # Get the response
     response = SESSION.get(url, params=params)
 
-    # Parse the response
-    root = ElementTree.fromstring(response.text)
+    # Parse the response securely into ElementTree
+    root = SecureElementTree.fromstring(response.text)
 
     # TODO finish parsing response into a list of named tuples if no errors, otherwise raise the error
     if len(root) == 1 and root[0].tag == 'error':
