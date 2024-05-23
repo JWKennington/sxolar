@@ -1,7 +1,7 @@
 .. sXolar documentation master file
 
-sXolar, Scholar's tools for working with arXiv
-==============================================
+Scholar's tools for arXiv
+=========================
 
 .. toctree::
    :maxdepth: 2
@@ -20,11 +20,11 @@ summarizing query results into digest formats, based on a configuration file.
 
 
 Getting Started
-===============
+---------------
 
 
 Installation
-------------
+~~~~~~~~~~~~
 
 To install sXolar, run the command:
 
@@ -36,7 +36,7 @@ This will install the sXolar package and all of its dependencies.
 
 
 Simple Usage
-------------
+~~~~~~~~~~~~
 
 The high-level api provides a simple object-oriented interface for constructing
 and executing queries. Here is an example of how to use the high-level api:
@@ -56,7 +56,7 @@ information on the high-level api, see the :ref:`api/index`.
 
 
 sXolar API
-==========
+----------
 
 .. toctree::
    :maxdepth: 2
@@ -68,7 +68,7 @@ sXolar API
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
