@@ -3,6 +3,9 @@
 ![Build](https://github.com/JWKennington/sxolar/actions/workflows/build.yml/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/jwkennington/sxolar/badge)](https://www.codefactor.io/repository/github/jwkennington/sxolar)
 [![codecov](https://codecov.io/gh/JWKennington/sxolar/graph/badge.svg?token=s3uaJfzV0q)](https://codecov.io/gh/JWKennington/sxolar)
+[![Documentation Status](https://readthedocs.org/projects/sxolar/badge/?version=latest)](https://sxolar.readthedocs.io/en/latest/?badge=latest)
+ 
+
 
 [//]: # ([![PyPI]&#40;https://img.shields.io/pypi/v/requests-ratelimiter?color=blue&#41;]&#40;https://pypi.org/project/requests-ratelimiter&#41;)
 
