@@ -19,7 +19,7 @@ It includes low-level and high-level interfaces for querying arXiv metadata,
 summarizing query results into digest formats, based on a configuration file.
 
 The tools are written in Python and are designed to be used in any python application. The tools are designed to be
-used in place of the [Arxiv API](https://arxiv.org/help/api/index), with a simpler interface and more features, including
+used in place of the `Arxiv API <https://arxiv.org/help/api/index>`, with a simpler interface and more features, including
 
 * Searching and downloading papers
 * Creating personalized search indices for easy repeated searches
