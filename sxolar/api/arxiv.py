@@ -21,6 +21,20 @@ SESSION = LimiterSession(per_minute=20)
 URL_BASE = 'http://export.arxiv.org/api/'
 URL_QUERY = URL_BASE + 'query'
 
+# Define XML tags for the Arxiv API [4]
+TAG_PREFIX = '{http://www.w3.org/2005/Atom}'
+TAG_ENTRY = 'entry'
+TAG_TITLE = 'title'
+TAG_ID = 'id'
+TAG_PUBLISHED = 'published'
+TAG_UPDATED = 'updated'
+TAG_SUMMARY = 'summary'
+TAG_AUTHOR = 'author'
+TAG_NAME = 'name'
+TAG_AFFILIATION = 'affiliation'
+TAG_CATEGORY = 'category'
+TAG_TERM = 'term'
+TAG_SCHEME = 'scheme'
 
 # Define the Entry output formats for the Arxiv API [4]
 Entry = collections.namedtuple('Entry', 'title id published updated summary author category')
@@ -50,7 +64,55 @@ class LogicalOperator:
     AND_NOT = ' ANDNOT '
 
 
-def get_and_parse(url: str, params: dict) -> dict:
+def find(entry: ElementTree.Element, tag: str, find_all: bool = False) -> Union[str, List[str]]:
+    """Find the tag in the entry and return the text.
+
+    Args:
+        entry (ElementTree.Element): The entry to search.
+        tag (str): The tag to search for.
+
+    Returns:
+        str: The text of the tag.
+    """
+    if not tag.startswith(TAG_PREFIX):
+        tag = TAG_PREFIX + tag
+
+    if find_all:
+        return entry.findall(tag)
+
+    res = entry.find(tag)
+    if res is not None:
+        return res.text
+
+
+def parse_entry(entry: ElementTree.Element) -> Entry:
+    """Parse an entry from the Arxiv API response.
+
+    Args:
+        entry (ElementTree.Element): The entry to parse.
+
+    Returns:
+        Entry: The parsed entry.
+    """
+    # Parse the authors
+    authors = [Author(name=find(author, TAG_NAME),
+                      affiliation=find(author, TAG_AFFILIATION)) for author in find(entry, TAG_AUTHOR, find_all=True)]
+
+    # Parse the categories
+    categories = [Category(term=category.attrib[TAG_TERM],
+                           scheme=category.attrib[TAG_SCHEME]) for category in find(entry, TAG_CATEGORY, find_all=True)]
+
+    # Return the parsed entry
+    return Entry(title=find(entry, TAG_TITLE),
+                 id=find(entry, TAG_ID),
+                 published=find(entry, TAG_PUBLISHED),
+                 updated=find(entry, TAG_UPDATED),
+                 summary=find(entry, TAG_SUMMARY),
+                 author=authors,
+                 category=categories)
+
+
+def get_and_parse(url: str, params: dict) -> List[Entry]:
     """Get and parse the response from the Arxiv API, the payloads
     are encoded using the Atom 1 XML format.
 
@@ -68,9 +130,13 @@ def get_and_parse(url: str, params: dict) -> dict:
     root = ElementTree.fromstring(response.text)
 
     # TODO finish parsing response into a list of named tuples if no errors, otherwise raise the error
+    if len(root) == 1 and root[0].tag == 'error':
+        raise ValueError(f'No results found. Error: {root[0].text}')
+
+    entries = [parse_entry(entry) for entry in find(root, TAG_ENTRY, find_all=True)]
 
     # Return the parsed response
-    return root
+    return entries
 
 
 def _extend_query(query: str, field: SearchField, value: Union[str, List[str]],
