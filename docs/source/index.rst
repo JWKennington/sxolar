@@ -65,6 +65,60 @@ overloaded to represent a logical OR operation between two query objects. For mo
 information on the high-level api, see the :ref:`api/index`.
 
 
+Quick Examples
+~~~~~~~~~~~~~~
+
+Here are some quick examples of how to use the sXolar package.
+
+Search for papers by a specific author:
+
+.. code-block:: python
+
+    from sxolar import Author
+
+    query = Author('John Doe')
+    query.search()
+
+Search for papers by multiple authors (logical OR):
+
+.. code-block:: python
+
+    from sxolar import Author
+
+    query = Author('John Doe') | Author('Jane Doe')
+    query.search()
+
+
+Search for papers by a specific title:
+
+.. code-block:: python
+
+    from sxolar import Title
+
+    query = Title('Quantum Mechanics')
+    query.search()
+
+
+Search for papers with a specific title, but not by a specific author:
+
+.. code-block:: python
+
+    from sxolar import Title, Author
+
+    query = Title('Quantum Mechanics') - Author('John Doe')
+    query.search()
+
+
+Search for papers with a specific title, but not by a specific set of authors:
+
+.. code-block:: python
+
+    from sxolar import Title, Author
+
+    query = Title('Quantum Mechanics') - (Author('John Doe') | Author('Jane Doe')).wrap()
+    query.search()
+
+
 sXolar API
 ----------
 
