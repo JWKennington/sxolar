@@ -1,6 +1,7 @@
 """Higher-level api for searching for papers, uses an object interface
 with overridden magic methods for syntactic sugar
 """
+
 from sxolar.api import arxiv
 from sxolar.api.arxiv import LogicalOperator, SearchField
 
