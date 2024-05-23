@@ -8,6 +8,12 @@ sXolar, Scholar's tools for working with arXiv
    :caption: Contents:
 
 
+.. image:: sxolar.png
+    :align: center
+    :width: 200px
+    :alt: sXolar logo
+
+
 The sXolar package is a collection of tools for working with arXiv data.
 It includes low-level and high-level interfaces for querying arXiv metadata,
 summarizing query results into digest formats, based on a configuration file.
