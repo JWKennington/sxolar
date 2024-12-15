@@ -164,4 +164,4 @@ cython_debug/
 
 # Packaging with scm
 # Ignore the file: src/sxolar/_version.py
-version.py
+_version.py
