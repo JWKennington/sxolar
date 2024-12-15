@@ -161,3 +161,7 @@ cython_debug/
 
 # Env variables
 .envvars
+
+# Packaging with scm
+# Ignore the file: src/sxolar/_version.py
+version.py
