@@ -38,24 +38,32 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: JWKennington/sxolar
+
+  docs:
+    name: Docs (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.11" ]
+
+    steps:
       - name: Build docs with mkdocs
         run: |
           pip install .[docs]
           mkdocs build
-#      - name: Deploy docs to GitHub Pages (only on main branch)
-#        if: github.ref == 'refs/heads/main'
-#        uses: peaceiris/actions-gh-pages@v3
-#        with:
-#          personal_token: ${{ secrets.GITHUB_TOKEN }}
-#          publish_dir: ./site
-#          publish_branch: gh-pages
-#          cname: sxolar.org
-#          commit_message: "Deploy site"
-#          allow_empty_commit: true
+    
       - name: Deploy docs
+        # Check only linux build
+        if: matrix.os == 'ubuntu-latest'
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CUSTOM_DOMAIN: sxolar.org
           CONFIG_FILE: mkdocs.yml
-          EXTRA_PACKAGES: ".[docs]"
+          REQUIREMENTS_FILE: docs/requirements.txt
