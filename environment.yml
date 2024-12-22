@@ -12,3 +12,5 @@ dependencies:
   - requests
   - requests-ratelimiter
   - ruamel.yaml
+  - pip:
+    - pytest-markdown-docs

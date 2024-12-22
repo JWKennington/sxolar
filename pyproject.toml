@@ -11,9 +11,10 @@ build-backend = "setuptools.build_meta"
 name = "sxolar"
 dynamic = ["version"]
 dependencies = [
-    "sgn",
-    "numpy",
-    "scipy",
+    "requests",
+    "defusedxml",
+    "requests_ratelimiter",
+    "ruamel.yaml",
 ]
 requires-python = ">=3.9"
 authors = [
@@ -37,6 +38,9 @@ Issues = "https://github.com/JWKennington/sxolar/issues"
 docs = [
     "mkdocs",
     "mkdocstrings",
+    "mkdocstrings-python",
+    "mkdocs-material",
+    "pymdown-extensions",
 ]
 lint = [
     "black",
@@ -55,10 +59,11 @@ lint = [
 test = [
     "pytest",
     "pytest-cov",
+    "pytest-markdown-docs",
 ]
 dev = [
     "sxolar[docs]",
-    "sgn-ts[test]",
+    "sxolar[test]",
 ]
 
 [tool.setuptools.packages.find]
@@ -87,7 +92,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-p no:warnings --cov=sxolar"
+addopts = "-p no:warnings --cov=sxolar --markdown-docs --markdown-docs-syntax=superfences"
 
 [tool.flake8]
 max-line-length = 88

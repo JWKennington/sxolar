@@ -1,3 +1,10 @@
-furo
-myst-parser
-pytest
+.
+requests
+defusedxml
+requests_ratelimiter
+ruamel.yaml
+mkdocs
+mkdocstrings
+mkdocstrings-python
+mkdocs-material
+pymdown-extensions
