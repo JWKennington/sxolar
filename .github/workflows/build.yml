@@ -32,9 +32,29 @@ jobs:
           auto-activate-base: false
       - name: Run Test Suite
         run: |
-          pytest --cov=./sxolar --cov-report=xml
+          pytest --cov=./sxolar --cov-report=xml --markdown-docs --markdown-docs-syntax=superfences
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: JWKennington/sxolar
+      - name: Build docs with mkdocs
+        run: |
+          mkdocs build
+#      - name: Deploy docs to GitHub Pages (only on main branch)
+#        if: github.ref == 'refs/heads/main'
+#        uses: peaceiris/actions-gh-pages@v3
+#        with:
+#          personal_token: ${{ secrets.GITHUB_TOKEN }}
+#          publish_dir: ./site
+#          publish_branch: gh-pages
+#          cname: sxolar.org
+#          commit_message: "Deploy site"
+#          allow_empty_commit: true
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_DOMAIN: sxolar.org
+          CONFIG_FILE: mkdocs.yml
+          EXTRA_PACKAGES: ".[docs]"
