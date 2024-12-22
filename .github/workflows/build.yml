@@ -70,4 +70,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CUSTOM_DOMAIN: sxolar.org
           CONFIG_FILE: mkdocs.yml
-          REQUIREMENTS_FILE: docs/requirements.txt
+          REQUIREMENTS: docs/requirements.txt
