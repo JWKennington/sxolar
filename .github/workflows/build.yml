@@ -40,6 +40,7 @@ jobs:
           slug: JWKennington/sxolar
       - name: Build docs with mkdocs
         run: |
+          pip install .[docs]
           mkdocs build
 #      - name: Deploy docs to GitHub Pages (only on main branch)
 #        if: github.ref == 'refs/heads/main'
