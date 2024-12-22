@@ -4,10 +4,15 @@ For more user-friendly functions, see the `sxolar.api.query` module.
 References:
     [1] API Basics: https://info.arxiv.org/help/api/basics.html
     [2] Rate Limits: https://info.arxiv.org/help/api/tou.html
-    [3] Search Query Language: https://info.arxiv.org/help/api/user-manual.html#query_details
-    [4] Entry output format: https://info.arxiv.org/help/api/user-manual.html#_entry_metadata
+    [3] Search Query Language: https://info.arxiv.org/help/api/user-manual.html
+    #query_details
+    [4] Entry output format: https://info.arxiv.org/help/api/user-manual.html
+    #_entry_metadata
 """
+
 import collections
+import datetime
+import enum
 from typing import List, Union
 from urllib import parse
 from defusedxml import ElementTree as SecureElementTree
@@ -19,53 +24,101 @@ from requests_ratelimiter import LimiterSession
 SESSION = LimiterSession(per_minute=20)
 
 # Define the base URL for the Arxiv API [1]
-URL_BASE = 'http://export.arxiv.org/api/'
-URL_QUERY = URL_BASE + 'query'
+URL_BASE = "http://export.arxiv.org/api/"
+URL_QUERY = URL_BASE + "query"
 
 # Define XML tags for the Arxiv API [4]
-TAG_PREFIX = '{http://www.w3.org/2005/Atom}'
-TAG_ENTRY = 'entry'
-TAG_TITLE = 'title'
-TAG_ID = 'id'
-TAG_PUBLISHED = 'published'
-TAG_UPDATED = 'updated'
-TAG_SUMMARY = 'summary'
-TAG_AUTHOR = 'author'
-TAG_NAME = 'name'
-TAG_AFFILIATION = 'affiliation'
-TAG_CATEGORY = 'category'
-TAG_TERM = 'term'
-TAG_SCHEME = 'scheme'
+TAG_PREFIX = "{http://www.w3.org/2005/Atom}"
+TAG_ENTRY = "entry"
+TAG_TITLE = "title"
+TAG_ID = "id"
+TAG_PUBLISHED = "published"
+TAG_UPDATED = "updated"
+TAG_SUMMARY = "summary"
+TAG_AUTHOR = "author"
+TAG_NAME = "name"
+TAG_AFFILIATION = "affiliation"
+TAG_CATEGORY = "category"
+TAG_TERM = "term"
+TAG_SCHEME = "scheme"
+
+# Define author fields
+FIELD_AUTHOR_NAME = "name"
+FIELD_AUTHOR_AFFILIATION = "affiliation"
+FIELDS_AUTHOR = (
+    FIELD_AUTHOR_NAME,
+    FIELD_AUTHOR_AFFILIATION,
+)
+
+# Define category fields
+FIELD_CATEGORY_TERM = "term"
+FIELD_CATEGORY_SCHEME = "scheme"
+FIELDS_CATEGORY = (
+    FIELD_CATEGORY_TERM,
+    FIELD_CATEGORY_SCHEME,
+)
+
+# Define entry fields
+FIELD_ENTRY_TITLE = "title"
+FIELD_ENTRY_ID = "id"
+FIELD_ENTRY_PUBLISHED = "published"
+FIELD_ENTRY_UPDATED = "updated"
+FIELD_ENTRY_SUMMARY = "summary"
+FIELD_ENTRY_AUTHOR = "author"
+FIELD_ENTRY_CATEGORY = "category"
+FIELDS_ENTRY = (
+    FIELD_ENTRY_TITLE,
+    FIELD_ENTRY_ID,
+    FIELD_ENTRY_PUBLISHED,
+    FIELD_ENTRY_UPDATED,
+    FIELD_ENTRY_SUMMARY,
+    FIELD_ENTRY_AUTHOR,
+    FIELD_ENTRY_CATEGORY,
+)
+
 
 # Define the Entry output formats for the Arxiv API [4]
-Entry = collections.namedtuple('Entry', 'title id published updated summary author category')
-Author = collections.namedtuple('Author', 'name affiliation')
-Category = collections.namedtuple('Category', 'term scheme')
+Entry = collections.namedtuple("Entry", " ".join(FIELDS_ENTRY))
+Author = collections.namedtuple("Author", " ".join(FIELDS_AUTHOR))
+Category = collections.namedtuple("Category", " ".join(FIELDS_CATEGORY))
+
+
+class SortBy(str, enum.Enum):
+    Relevance = "relevance"
+    LastUpdatedDate = "lastUpdatedDate"
+    SubmittedDate = "submittedDate"
+
+
+class SortOrder(str, enum.Enum):
+    Ascending = "ascending"
+    Descending = "descending"
 
 
 class SearchField:
-    """Enumeration of search fields for the Arxiv API [3]
-    """
-    TITLE = 'ti'
-    AUTHOR = 'au'
-    ABSTRACT = 'abs'
-    COMMENT = 'co'
-    JOURNAL_REFERENCE = 'jr'
-    CATEGORY = 'cat'
-    REPORT_NUMBER = 'rn'
-    ID = 'id'
-    ALL = 'all'
+    """Enumeration of search fields for the Arxiv API [3]"""
+
+    TITLE = "ti"
+    AUTHOR = "au"
+    ABSTRACT = "abs"
+    COMMENT = "co"
+    JOURNAL_REFERENCE = "jr"
+    CATEGORY = "cat"
+    REPORT_NUMBER = "rn"
+    ID = "id"
+    ALL = "all"
 
 
 class LogicalOperator:
-    """Enumeration of logical operators for the Arxiv API [3]
-    """
-    AND = ' AND '
-    OR = ' OR '
-    AND_NOT = ' ANDNOT '
+    """Enumeration of logical operators for the Arxiv API [3]"""
+
+    AND = " AND "
+    OR = " OR "
+    AND_NOT = " ANDNOT "
 
 
-def find(entry: ElementTree.Element, tag: str, find_all: bool = False) -> Union[str, List[str]]:
+def find(
+    entry: ElementTree.Element, tag: str, find_all: bool = False
+) -> Union[str, List[str]]:
     """Find the tag in the entry and return the text.
 
     Args:
@@ -96,21 +149,35 @@ def parse_entry(entry: ElementTree.Element) -> Entry:
         Entry: The parsed entry.
     """
     # Parse the authors
-    authors = [Author(name=find(author, TAG_NAME),
-                      affiliation=find(author, TAG_AFFILIATION)) for author in find(entry, TAG_AUTHOR, find_all=True)]
+    authors = [
+        Author(name=find(author, TAG_NAME), affiliation=find(author, TAG_AFFILIATION))
+        for author in find(entry, TAG_AUTHOR, find_all=True)
+    ]
 
     # Parse the categories
-    categories = [Category(term=category.attrib[TAG_TERM],
-                           scheme=category.attrib[TAG_SCHEME]) for category in find(entry, TAG_CATEGORY, find_all=True)]
+    categories = [
+        Category(term=category.attrib[TAG_TERM], scheme=category.attrib[TAG_SCHEME])
+        for category in find(entry, TAG_CATEGORY, find_all=True)
+    ]
+
+    # Parse date-type fields
+    published = find(entry, TAG_PUBLISHED)
+    updated = find(entry, TAG_UPDATED)
+    if published is not None:
+        published = datetime.datetime.fromisoformat(published)
+    if updated is not None:
+        updated = datetime.datetime.fromisoformat(updated)
 
     # Return the parsed entry
-    return Entry(title=find(entry, TAG_TITLE),
-                 id=find(entry, TAG_ID),
-                 published=find(entry, TAG_PUBLISHED),
-                 updated=find(entry, TAG_UPDATED),
-                 summary=find(entry, TAG_SUMMARY),
-                 author=authors,
-                 category=categories)
+    return Entry(
+        title=find(entry, TAG_TITLE),
+        id=find(entry, TAG_ID),
+        published=published,
+        updated=updated,
+        summary=find(entry, TAG_SUMMARY),
+        author=authors,
+        category=categories,
+    )
 
 
 def get_and_parse(url: str, params: dict) -> List[Entry]:
@@ -130,9 +197,10 @@ def get_and_parse(url: str, params: dict) -> List[Entry]:
     # Parse the response securely into ElementTree
     root = SecureElementTree.fromstring(response.text)
 
-    # TODO finish parsing response into a list of named tuples if no errors, otherwise raise the error
-    if len(root) == 1 and root[0].tag == 'error':
-        raise ValueError(f'No results found. Error: {root[0].text}')
+    # TODO finish parsing response into a list of named tuples if no errors,
+    #  otherwise raise the error
+    if len(root) == 1 and root[0].tag == "error":
+        raise ValueError(f"No results found. Error: {root[0].text}")
 
     entries = [parse_entry(entry) for entry in find(root, TAG_ENTRY, find_all=True)]
 
@@ -140,8 +208,13 @@ def get_and_parse(url: str, params: dict) -> List[Entry]:
     return entries
 
 
-def _extend_query(query: str, field: SearchField, value: Union[str, List[str]],
-                  how: LogicalOperator = LogicalOperator.AND, how_list: LogicalOperator = LogicalOperator.OR) -> str:
+def _extend_query(
+    query: str,
+    field: SearchField,
+    value: Union[str, List[str]],
+    how: LogicalOperator = LogicalOperator.AND,
+    how_list: LogicalOperator = LogicalOperator.OR,
+) -> str:
     """Extend the query with the given field and value.
 
     Args:
@@ -165,16 +238,26 @@ def _extend_query(query: str, field: SearchField, value: Union[str, List[str]],
 
     # Check if value is scalar or list, then extend query
     if isinstance(value, str):
-        query += f'{field}:{value}'
+        query += f"{field}:{value}"
     elif isinstance(value, list):
-        query += f'({field}:{how_list.join(value)})'
+        query += f"({field}:{how_list.join(value)})"
 
     return query
 
 
-def format_search_query(title: Union[str, List[str]] = None, author: Union[str, List[str]] = None, abstract: Union[str, List[str]] = None, comment: Union[str, List[str]] = None,
-                        journal_reference: Union[str, List[str]] = None, category: Union[str, List[str]] = None, report_number: Union[str, List[str]] = None, id_list: List[str] = None,
-                        all_: Union[str, List[str]] = None, how: LogicalOperator = LogicalOperator.AND, how_list: LogicalOperator = LogicalOperator.OR) -> Union[str, None]:
+def format_search_query(
+    title: Union[str, List[str]] = None,
+    author: Union[str, List[str]] = None,
+    abstract: Union[str, List[str]] = None,
+    comment: Union[str, List[str]] = None,
+    journal_reference: Union[str, List[str]] = None,
+    category: Union[str, List[str]] = None,
+    report_number: Union[str, List[str]] = None,
+    id_list: List[str] = None,
+    all_: Union[str, List[str]] = None,
+    how: LogicalOperator = LogicalOperator.AND,
+    how_list: LogicalOperator = LogicalOperator.OR,
+) -> Union[str, None]:
     """Format the search query for the Arxiv API.
 
     Args:
@@ -183,40 +266,92 @@ def format_search_query(title: Union[str, List[str]] = None, author: Union[str, 
         author:
             Union[str, List[str]], optional, The author to search for. Defaults to None.
         abstract:
-            Union[str, List[str]], optional, The abstract to search for. Defaults to None.
+            Union[str, List[str]], optional, The abstract to search for. Defaults to
+            None.
         comment:
-            Union[str, List[str]], optional, The comment to search for. Defaults to None.
+            Union[str, List[str]], optional, The comment to search for. Defaults to
+            None.
         journal_reference:
-            Union[str, List[str]], optional, The journal reference to search for. Defaults to None.
+            Union[str, List[str]], optional, The journal reference to search for.
+            Defaults to None.
         category:
-            Union[str, List[str]], optional, The category to search for. Defaults to None.
+            Union[str, List[str]], optional, The category to search for. Defaults to
+            None.
         report_number:
-            Union[str, List[str]], optional, The report number to search for. Defaults to None.
+            Union[str, List[str]], optional, The report number to search for.
+            Defaults to None.
         id_list:
             List[str], optional, The list of Arxiv IDs to search for. Defaults to None.
         all_:
-            Union[str, List[str]], optional, The all field to search for. Defaults to None.
+            Union[str, List[str]], optional, The all field to search for. Defaults to
+            None.
+        how:
+            LogicalOperator, optional, The logical operator to use when adding the
+            field. Defaults to LogicalOperator.AND.
+        how_list:
+            LogicalOperator, optional, The logical operator to use when adding a list
+            of values. Defaults to LogicalOperator.OR.
 
     Returns:
         str or None: The formatted query string, or None if no fields are provided.
     """
     # Short-circuit if no fields are provided
-    if all(v is None for v in (title, author, abstract, comment, journal_reference, category, report_number, id_list, all_)):
+    if all(
+        v is None
+        for v in (
+            title,
+            author,
+            abstract,
+            comment,
+            journal_reference,
+            category,
+            report_number,
+            id_list,
+            all_,
+        )
+    ):
         return None
 
-    query = ''
+    query = ""
 
     for field, value in zip(
-            (SearchField.TITLE, SearchField.AUTHOR, SearchField.ABSTRACT, SearchField.COMMENT, SearchField.JOURNAL_REFERENCE, SearchField.CATEGORY, SearchField.REPORT_NUMBER, SearchField.ID, SearchField.ALL),
-            (title, author, abstract, comment, journal_reference, category, report_number, id_list, all_)
+        (
+            SearchField.TITLE,
+            SearchField.AUTHOR,
+            SearchField.ABSTRACT,
+            SearchField.COMMENT,
+            SearchField.JOURNAL_REFERENCE,
+            SearchField.CATEGORY,
+            SearchField.REPORT_NUMBER,
+            SearchField.ID,
+            SearchField.ALL,
+        ),
+        (
+            title,
+            author,
+            abstract,
+            comment,
+            journal_reference,
+            category,
+            report_number,
+            id_list,
+            all_,
+        ),
     ):
         if value is not None:
             query = _extend_query(query, field, value, how=how, how_list=how_list)
 
-    return parse.quote(query, safe='/:&=')
+    return parse.quote(query, safe="/:&=")
 
 
-def _query(search_query: str = None, id_list: List[str] = None, start: int = 0, max_results: int = 10) -> dict:
+def _query(
+    search_query: str = None,
+    id_list: List[str] = None,
+    start: int = 0,
+    max_results: int = 10,
+    sort_by: SortBy = SortBy.Relevance,
+    sort_order: SortOrder = SortOrder.Descending,
+) -> dict:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -228,16 +363,22 @@ def _query(search_query: str = None, id_list: List[str] = None, start: int = 0, 
             int, optional, The index to start the search from. Defaults to 0.
         max_results:
             int, optional, The maximum number of results to return. Defaults to 10.
+        sort_by:
+            SortBy, optional, The field to sort by. Defaults to SortBy.Relevance.
+        sort_order:
+            SortOrder, optional, The order to sort by. Defaults to SortOrder.Descending.
 
     Returns:
         dict: The parsed response from the API
     """
     # Define the parameters for the query
     params = {
-        'search_query': search_query,
-        'id_list': id_list,
-        'start': start,
-        'max_results': max_results
+        "search_query": search_query,
+        "id_list": id_list,
+        "start": start,
+        "max_results": max_results,
+        "sortBy": sort_by.value,
+        "sortOrder": sort_order.value,
     }
 
     # Filter out the None values
@@ -247,9 +388,26 @@ def _query(search_query: str = None, id_list: List[str] = None, start: int = 0, 
     return get_and_parse(URL_QUERY, params)
 
 
-def query(title: Union[str, List[str]] = None, author: Union[str, List[str]] = None, abstract: Union[str, List[str]] = None, comment: Union[str, List[str]] = None,
-          journal_reference: Union[str, List[str]] = None, category: Union[str, List[str]] = None, report_number: Union[str, List[str]] = None, id_list: List[str] = None,
-          all_: Union[str, List[str]] = None, how: LogicalOperator = LogicalOperator.AND, how_list: LogicalOperator = LogicalOperator.OR, start: int = 0, max_results: int = 10) -> dict:
+def query(
+    title: Union[str, List[str]] = None,
+    author: Union[str, List[str]] = None,
+    abstract: Union[str, List[str]] = None,
+    comment: Union[str, List[str]] = None,
+    journal_reference: Union[str, List[str]] = None,
+    category: Union[str, List[str]] = None,
+    report_number: Union[str, List[str]] = None,
+    id_list: List[str] = None,
+    all_: Union[str, List[str]] = None,
+    how: LogicalOperator = LogicalOperator.AND,
+    how_list: LogicalOperator = LogicalOperator.OR,
+    start: int = 0,
+    max_results: int = 10,
+    sort_by: SortBy = SortBy.Relevance,
+    sort_order: SortOrder = SortOrder.Descending,
+    min_date: datetime.datetime = None,
+    max_date: datetime.datetime = None,
+    date_filter_field: str = FIELD_ENTRY_UPDATED,
+) -> dict:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -258,34 +416,72 @@ def query(title: Union[str, List[str]] = None, author: Union[str, List[str]] = N
         author:
             Union[str, List[str]], optional, The author to search for. Defaults to None.
         abstract:
-            Union[str, List[str]], optional, The abstract to search for. Defaults to None.
+            Union[str, List[str]], optional, The abstract to search for. Defaults to
+            None.
         comment:
-            Union[str, List[str]], optional, The comment to search for. Defaults to None.
+            Union[str, List[str]], optional, The comment to search for. Defaults to
+            None.
         journal_reference:
-            Union[str, List[str]], optional, The journal reference to search for. Defaults to None.
+            Union[str, List[str]], optional, The journal reference to search for.
+            Defaults to None.
         category:
-            Union[str, List[str]], optional, The category to search for. Defaults to None.
+            Union[str, List[str]], optional, The category to search for. Defaults to
+            None.
         report_number:
-            Union[str, List[str]], optional, The report number to search for. Defaults to None.
+            Union[str, List[str]], optional, The report number to search for.
+            Defaults to None.
         id_list:
             List[str], optional, The list of Arxiv IDs to search for. Defaults to None.
         all_:
-            Union[str, List[str]], optional, The all field to search for. Defaults to None.
+            Union[str, List[str]], optional, The all field to search for. Defaults to
+            None.
         how:
-            LogicalOperator, optional, The logical operator to use when adding the field. Defaults to LogicalOperator.AND.
+            LogicalOperator, optional, The logical operator to use when adding the
+            field. Defaults to LogicalOperator.AND.
         how_list:
-            LogicalOperator, optional, The logical operator to use when adding a list of values. Defaults to LogicalOperator.OR.
+            LogicalOperator, optional, The logical operator to use when adding a list
+            of values. Defaults to LogicalOperator.OR.
         start:
             int, optional, The index to start the search from. Defaults to 0.
         max_results:
             int, optional, The maximum number of results to return. Defaults to 10.
+        sort_by:
+            SortBy, optional, The field to sort by. Defaults to SortBy.Relevance.
+        sort_order:
+            SortOrder, optional, The order to sort by. Defaults to SortOrder.Descending.
     """
     # Format the search query
-    search_query = format_search_query(title, author, abstract, comment, journal_reference, category, report_number, id_list, all_, how, how_list)
+    search_query = format_search_query(
+        title,
+        author,
+        abstract,
+        comment,
+        journal_reference,
+        category,
+        report_number,
+        id_list,
+        all_,
+        how,
+        how_list,
+    )
 
     # Short-circuit if no search query is provided
     if search_query is None and id_list is None:
-        raise ValueError('No search query provided; cannot query the entire Arxiv.')
+        raise ValueError("No search query provided; cannot query the entire Arxiv.")
 
     # Query the API
-    return _query(search_query, id_list, start, max_results)
+    results = _query(search_query, id_list, start, max_results, sort_by, sort_order)
+
+    # Filter for dates if specified
+    if not date_filter_field in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
+        raise ValueError(
+            f"Invalid date filter field: {date_filter_field}, options "
+            f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
+        )
+    if min_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) >= min_date]
+    if max_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) <= max_date]
+
+    # Return the results
+    return results
