@@ -1,7 +1,8 @@
 """Higher-level api for searching for papers, uses an object interface
 with overridden magic methods for syntactic sugar
 """
-from typing import Union
+
+from typing import Iterable, Union
 
 from sxolar.api import arxiv
 from sxolar.api.arxiv import LogicalOperator, SearchField
@@ -40,7 +41,7 @@ class Query:
         """Overloads the subtraction operator to create a new query"""
         return self.and_not(other)
 
-    def and_(self, other: Union[str, 'Query']):
+    def and_(self, other: Union[str, "Query"]):
         """Join two queries with the AND operator
 
         Args:
@@ -50,7 +51,7 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f'{self}{LogicalOperator.AND}{other}')
+        return Query(f"{self}{LogicalOperator.AND}{other}")
 
     def and_not(self, other):
         """Join two queries with the AND NOT operator
@@ -62,7 +63,7 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f'{self}{LogicalOperator.AND_NOT}{other}')
+        return Query(f"{self}{LogicalOperator.AND_NOT}{other}")
 
     def or_(self, other):
         """Join two queries with the OR operator
@@ -74,7 +75,30 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f'{self}{LogicalOperator.OR}{other}')
+        return Query(f"{self}{LogicalOperator.OR}{other}")
+
+    def join(
+        self, *others: Iterable["Query"], operator: LogicalOperator = LogicalOperator.OR
+    ):
+        """Join multiple queries with an operator
+
+        Args:
+            others:
+                Iterable[Query], the queries to join
+            operator:
+                LogicalOperator, the operator to use to join the queries
+
+        Returns:
+            Query: A new query object
+        """
+        if not others:
+            return self
+
+        value = self.value
+        for other in others:
+            value = f"{value}{operator}{other}"
+
+        return Query(value).wrap()
 
     def wrap(self):
         """Wrap the query in parenthesis
@@ -82,7 +106,7 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f'({self})')
+        return Query(f"({self})")
 
     def search(self, start: int = 0, max_results: int = 10):
         """Searches the arxiv API with the query
@@ -96,12 +120,157 @@ class Query:
         Returns:
             list: A list of dictionaries representing the search results
         """
-        return arxiv._query(self.value, id_list=None, start=start, max_results=max_results)
+        return arxiv._query(
+            self.value, id_list=None, start=start, max_results=max_results
+        )
+
+    def to_str(self) -> str:
+        """Returns the string representation of the query"""
+        return self.value
+
+    @staticmethod
+    def from_str(value: str):
+        """Creates a new query from a string
+
+        Args:
+            value:
+                str, the value to search for
+        """
+        return Query(value)
+
+    @staticmethod
+    def from_authors(*authors: Iterable[str]):
+        """Creates a new author query
+
+        Args:
+            authors:
+                str, the name of the author, "First Last"
+        """
+        authors = [Author(author) for author in authors]
+        query = authors[0]
+        if authors[1:]:
+            query = query.join(authors[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_titles(*titles: Iterable[str]):
+        """Creates a new title query
+
+        Args:
+            titles:
+                str, the title of the paper
+        """
+        titles = [Title(title) for title in titles]
+        query = titles[0]
+        if titles[1:]:
+            query = query.join(titles[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_abstracts(*abstracts: Iterable[str]):
+        """Creates a new abstract query
+
+        Args:
+            abstracts:
+                str, the abstract of the paper
+        """
+        abstracts = [Abstract(abstract) for abstract in abstracts]
+        query = abstracts[0]
+        if abstracts[1:]:
+            query = query.join(abstracts[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_alls(*alls: Iterable[str]):
+        """Creates a new all query
+
+        Args:
+            alls:
+                str, the value to search for
+        """
+        alls = [All(all_) for all_ in alls]
+        query = alls[0]
+        if alls[1:]:
+            query = query.join(alls[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_journal_refs(*journal_refs: Iterable[str]):
+        """Creates a new journal reference query
+
+        Args:
+            journal_refs:
+                str, the journal reference
+        """
+        journal_refs = [JournalRef(journal_ref) for journal_ref in journal_refs]
+        query = journal_refs[0]
+        if journal_refs[1:]:
+            query = query.join(journal_refs[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_categories(*categories: Iterable[str]):
+        """Creates a new category query
+
+        Args:
+            categories:
+                str, the category
+        """
+        categories = [Category(category) for category in categories]
+        query = categories[0]
+        if categories[1:]:
+            query = query.join(categories[1:], operator=LogicalOperator.OR)
+        return query
+
+    @staticmethod
+    def from_combo(
+        authors: Iterable[str] = None,
+        titles: Iterable[str] = None,
+        abstracts: Iterable[str] = None,
+        alls: Iterable[str] = None,
+        journal_refs: Iterable[str] = None,
+        categories: Iterable[str] = None,
+        operator: LogicalOperator = LogicalOperator.AND,
+    ):
+        """Creates a new combo query
+
+        Args:
+            authors:
+                Iterable[str], the name of the author, "First Last"
+            titles:
+                Iterable[str], the title of the paper
+            abstracts:
+                Iterable[str], the abstract of the paper
+            alls:
+                Iterable[str], the value to search for
+            journal_refs:
+                Iterable[str], the journal reference
+            categories:
+                Iterable[str], the category
+        """
+        queries = []
+        if authors:
+            queries.append(Query.from_authors(*authors))
+        if titles:
+            queries.append(Query.from_titles(*titles))
+        if abstracts:
+            queries.append(Query.from_abstracts(*abstracts))
+        if alls:
+            queries.append(Query.from_alls(*alls))
+        if journal_refs:
+            queries.append(Query.from_journal_refs(*journal_refs))
+        if categories:
+            queries.append(Query.from_categories(*categories))
+
+        query = queries[0]
+        if queries[1:]:
+            query = query.join(queries[1:], operator=operator)
+
+        return query
 
 
 class Author(Query):
-    """Represents an author query for the arxiv API
-    """
+    """Represents an author query for the arxiv API"""
 
     def __init__(self, name: str):
         """Creates a new author query
@@ -111,13 +280,12 @@ class Author(Query):
                 str, the name of the author, "First Last"
         """
         if not name.startswith(SearchField.AUTHOR):
-            name = f'{SearchField.AUTHOR}:{name}'
+            name = f"{SearchField.AUTHOR}:{name}"
         super().__init__(name)
 
 
 class Title(Query):
-    """Represents a title query for the arxiv API
-    """
+    """Represents a title query for the arxiv API"""
 
     def __init__(self, title: str):
         """Creates a new title query
@@ -127,13 +295,12 @@ class Title(Query):
                 str, the title of the paper
         """
         if not title.startswith(SearchField.TITLE):
-            title = f'{SearchField.TITLE}:{title}'
+            title = f"{SearchField.TITLE}:{title}"
         super().__init__(title)
 
 
 class Abstract(Query):
-    """Represents an abstract query for the arxiv API
-    """
+    """Represents an abstract query for the arxiv API"""
 
     def __init__(self, abstract: str):
         """Creates a new abstract query
@@ -143,13 +310,12 @@ class Abstract(Query):
                 str, the abstract of the paper
         """
         if not abstract.startswith(SearchField.ABSTRACT):
-            abstract = f'{SearchField.ABSTRACT}:{abstract}'
+            abstract = f"{SearchField.ABSTRACT}:{abstract}"
         super().__init__(abstract)
 
 
 class All(Query):
-    """Represents an all query for the arxiv API
-    """
+    """Represents an all query for the arxiv API"""
 
     def __init__(self, all_: str):
         """Creates a new all query
@@ -159,13 +325,12 @@ class All(Query):
                 str, the value to search for
         """
         if not all_.startswith(SearchField.ALL):
-            all_ = f'{SearchField.ALL}:{all_}'
+            all_ = f"{SearchField.ALL}:{all_}"
         super().__init__(all_)
 
 
 class JournalRef(Query):
-    """Represents a journal reference query for the arxiv API
-    """
+    """Represents a journal reference query for the arxiv API"""
 
     def __init__(self, journal_ref: str):
         """Creates a new journal reference query
@@ -175,13 +340,12 @@ class JournalRef(Query):
                 str, the journal reference
         """
         if not journal_ref.startswith(SearchField.JOURNAL_REFERENCE):
-            journal_ref = f'{SearchField.JOURNAL_REFERENCE}:{journal_ref}'
+            journal_ref = f"{SearchField.JOURNAL_REFERENCE}:{journal_ref}"
         super().__init__(journal_ref)
 
 
 class Category(Query):
-    """Represents a category query for the arxiv API
-    """
+    """Represents a category query for the arxiv API"""
 
     def __init__(self, category: str):
         """Creates a new category query
@@ -190,5 +354,5 @@ class Category(Query):
             category:
         """
         if not category.startswith(SearchField.CATEGORY):
-            category = f'{SearchField.CATEGORY}:{category}'
+            category = f"{SearchField.CATEGORY}:{category}"
         super().__init__(category)

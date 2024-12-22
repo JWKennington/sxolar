@@ -5,19 +5,22 @@ References:
     [1] API Basics: https://info.arxiv.org/help/api/basics.html
     [2] Rate Limits: https://info.arxiv.org/help/api/tou.html
     [3] Search Query Language: https://info.arxiv.org/help/api/user-manual.html
-    #query_details
+        #query_details
     [4] Entry output format: https://info.arxiv.org/help/api/user-manual.html
-    #_entry_metadata
+        #_entry_metadata
+    [5] ArXiv identifier format: https://info.arxiv.org/help/arxiv_identifier.html
 """
 
 import collections
 import datetime
 import enum
+import re
+from dataclasses import dataclass
 from typing import List, Union
 from urllib import parse
-from defusedxml import ElementTree as SecureElementTree
 from xml.etree import ElementTree
 
+from defusedxml import ElementTree as SecureElementTree
 from requests_ratelimiter import LimiterSession
 
 # Impose the public ratelimit by default [2]
@@ -41,6 +44,19 @@ TAG_AFFILIATION = "affiliation"
 TAG_CATEGORY = "category"
 TAG_TERM = "term"
 TAG_SCHEME = "scheme"
+
+# Identifier schema (NEW)
+ID_PREFIX = "http://arxiv.org/abs/"
+ID_NUM_PATTERN_NEW = "[0-9]{4}\.[0-9]{4,5}"
+ID_VERSION_PATTERN_NEW = "[0-9]+"
+# ID Pattern with named groups for the number and version
+ID_PATTERN_NEW = (
+    f"(?P<number>{ID_NUM_PATTERN_NEW})(?:v(?P<version" f">{ID_VERSION_PATTERN_NEW}))?"
+)
+
+# Identifier schema (OLD) example: math.GT/0309136
+ID_NUM_PATTERN = "[a-z-]+/[0-9]{6,8}"
+ID_PATTERN_OLD = f"(?P<number>{ID_NUM_PATTERN})"
 
 # Define author fields
 FIELD_AUTHOR_NAME = "name"
@@ -78,13 +94,108 @@ FIELDS_ENTRY = (
 
 
 # Define the Entry output formats for the Arxiv API [4]
-Entry = collections.namedtuple("Entry", " ".join(FIELDS_ENTRY))
 Author = collections.namedtuple("Author", " ".join(FIELDS_AUTHOR))
 Category = collections.namedtuple("Category", " ".join(FIELDS_CATEGORY))
 
 
+@dataclass
+class Identifier:
+    """A dataclass for an Arxiv identifier.
+
+    Args:
+        number:
+            str, the number of the identifier.
+        version:
+            str, the version of the identifier.
+        is_new:
+            bool, whether the identifier is in the new format.
+    """
+
+    number: str
+    version: str
+    is_new: bool
+
+    def __str__(self) -> str:
+        """Return the identifier as a string."""
+        if self.is_new:
+            return f"{self.number}v{self.version}" if self.version else self.number
+        return self.number
+
+    def link(self) -> str:
+        """Formatted arxiv link for the identifier"""
+        return f"{ID_PREFIX}{self}"
+
+
+def parse_identifier(id_text: str) -> Identifier:
+    """Parse an Arxiv identifier into its components.
+
+    Args:
+        id_text:
+            str, the Arxiv identifier to parse.
+    """
+    # Check if the identifier starts with the url prefix, if so remove
+    if id_text.startswith(ID_PREFIX):
+        id_text = id_text[len(ID_PREFIX) :]
+
+    # Check if the identifier is in the new format
+    match = re.match(ID_PATTERN_NEW, id_text)
+    if match:
+        return Identifier(
+            number=match.group("number"),
+            version=match.group("version"),
+            is_new=True,
+        )
+
+    # Check if the identifier is in the old format
+    match = re.match(ID_PATTERN_OLD, id_text)
+    if match:
+        return Identifier(
+            number=match.group("number"),
+            version=None,
+            is_new=False,
+        )
+
+    # If the identifier does not match either pattern, raise an error
+    raise ValueError(f"Invalid Arxiv identifier: {id_text}")
+
+
+@dataclass
+class Entry:
+    """A dataclass for an entry from the Arxiv API [4]
+
+    Args:
+        title:
+            str, the title of the entry
+        id:
+            str, the Arxiv ID of the entry
+        published:
+            datetime.datetime, the published date of the entry
+        updated:
+            datetime.datetime, the updated date of the entry
+        summary:
+            str, the summary of the entry
+        author:
+            List[Author], the authors of the entry
+        category:
+            List[Category], the categories of the entry
+    """
+
+    title: str
+    id: Identifier
+    published: datetime.datetime
+    updated: datetime.datetime
+    summary: str
+    author: List[Author]
+    category: List[Category]
+
+    def link(self) -> str:
+        """Formatted arxiv link for the entry"""
+        return f"https://arxiv.org/abs/{self.id}"
+
+
 class SortBy(str, enum.Enum):
     """Enumeration of sort fields for the Arxiv API [3]"""
+
     Relevance = "relevance"
     LastUpdatedDate = "lastUpdatedDate"
     SubmittedDate = "submittedDate"
@@ -92,6 +203,7 @@ class SortBy(str, enum.Enum):
 
 class SortOrder(str, enum.Enum):
     """Enumeration of sort orders for the Arxiv API [3]"""
+
     Ascending = "ascending"
     Descending = "descending"
 
@@ -170,10 +282,14 @@ def parse_entry(entry: ElementTree.Element) -> Entry:
     if updated is not None:
         updated = datetime.datetime.fromisoformat(updated)
 
+    # Parse components of the identifier
+    raw_id = find(entry, TAG_ID)
+    id_ = parse_identifier(raw_id)
+
     # Return the parsed entry
     return Entry(
         title=find(entry, TAG_TITLE),
-        id=find(entry, TAG_ID),
+        id=id_,
         published=published,
         updated=updated,
         summary=find(entry, TAG_SUMMARY),
