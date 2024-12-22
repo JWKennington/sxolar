@@ -93,9 +93,26 @@ FIELDS_ENTRY = (
 )
 
 
-# Define the Entry output formats for the Arxiv API [4]
-Author = collections.namedtuple("Author", " ".join(FIELDS_AUTHOR))
 Category = collections.namedtuple("Category", " ".join(FIELDS_CATEGORY))
+
+
+@dataclass
+class Author:
+    """A dataclass for an author of an Arxiv entry.
+
+    Args:
+        name:
+            str, the name of the author.
+        affiliation:
+            str, the affiliation of the author.
+    """
+
+    name: str
+    affiliation: str
+
+    def __str__(self) -> str:
+        """Return the author as a string."""
+        return self.name
 
 
 @dataclass
@@ -191,6 +208,31 @@ class Entry:
     def link(self) -> str:
         """Formatted arxiv link for the entry"""
         return f"https://arxiv.org/abs/{self.id}"
+
+    def to_dict(self) -> dict:
+        """Return the entry as a dictionary."""
+        return {
+            FIELD_ENTRY_TITLE: self.title,
+            FIELD_ENTRY_ID: self.id,
+            FIELD_ENTRY_PUBLISHED: self.published,
+            FIELD_ENTRY_UPDATED: self.updated,
+            FIELD_ENTRY_SUMMARY: self.summary,
+            FIELD_ENTRY_AUTHOR: self.author,
+            FIELD_ENTRY_CATEGORY: self.category,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Entry":
+        """Create an entry from a dictionary."""
+        return Entry(
+            title=data[FIELD_ENTRY_TITLE],
+            id=data[FIELD_ENTRY_ID],
+            published=data[FIELD_ENTRY_PUBLISHED],
+            updated=data[FIELD_ENTRY_UPDATED],
+            summary=data[FIELD_ENTRY_SUMMARY],
+            author=data[FIELD_ENTRY_AUTHOR],
+            category=data[FIELD_ENTRY_CATEGORY],
+        )
 
 
 class SortBy(str, enum.Enum):
