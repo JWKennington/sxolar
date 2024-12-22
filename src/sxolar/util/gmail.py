@@ -15,7 +15,13 @@ except KeyError:
     EMAIL_APP_PASSWORD = None
 
 
-def send_email(subject: str, to: str, body: str, safe: bool = True):
+def send_email(
+    subject: str,
+    to: str,
+    body: str,
+    safe: bool = True,
+    is_plain: bool = True,
+):
     """Send an email using Gmail.
 
     Args:
@@ -37,6 +43,8 @@ def send_email(subject: str, to: str, body: str, safe: bool = True):
     message["Subject"] = subject
     message["From"] = EMAIL_SENDER
     message["To"] = to
+
+    
 
     html_content = f"""\
     <html>
