@@ -68,7 +68,7 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=protected-access,too-few-public-methods,redefined-builtin,redefined-outer-name,invalid-name,abstract-method,self-assigning-variable,inconsistent-return-statements,redefined-slots-in-subclass,typevar-name-mismatch,unspecified-encoding,broad-except,use-maxsplit-arg,import-outside-toplevel,too-many-return-statements,too-many-locals,undefined-loop-variable,too-many-arguments,wrong-import-order,too-many-instance-attributes
+disable=protected-access,too-few-public-methods,redefined-builtin,redefined-outer-name,invalid-name,abstract-method,self-assigning-variable,inconsistent-return-statements,redefined-slots-in-subclass,typevar-name-mismatch,unspecified-encoding,broad-except,use-maxsplit-arg,import-outside-toplevel,too-many-return-statements,too-many-locals,undefined-loop-variable,too-many-arguments,wrong-import-order,too-many-instance-attributes,too-many-positional-arguments
 
 
 [REPORTS]

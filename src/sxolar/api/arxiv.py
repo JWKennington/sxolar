@@ -84,12 +84,14 @@ Category = collections.namedtuple("Category", " ".join(FIELDS_CATEGORY))
 
 
 class SortBy(str, enum.Enum):
+    """Enumeration of sort fields for the Arxiv API [3]"""
     Relevance = "relevance"
     LastUpdatedDate = "lastUpdatedDate"
     SubmittedDate = "submittedDate"
 
 
 class SortOrder(str, enum.Enum):
+    """Enumeration of sort orders for the Arxiv API [3]"""
     Ascending = "ascending"
     Descending = "descending"
 
@@ -473,7 +475,7 @@ def query(
     results = _query(search_query, id_list, start, max_results, sort_by, sort_order)
 
     # Filter for dates if specified
-    if not date_filter_field in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
+    if date_filter_field not in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
         raise ValueError(
             f"Invalid date filter field: {date_filter_field}, options "
             f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
