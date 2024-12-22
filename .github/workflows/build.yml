@@ -68,6 +68,6 @@ jobs:
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CUSTOM_DOMAIN: sxolar.org
+          CUSTOM_DOMAIN: https://www.sxolar.org
           CONFIG_FILE: mkdocs.yml
           REQUIREMENTS: docs/requirements.txt
