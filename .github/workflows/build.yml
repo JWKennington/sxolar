@@ -63,8 +63,8 @@ jobs:
           mkdocs build
 
       - name: Deploy docs
-        # Check only linux build
-        if: matrix.os == 'ubuntu-latest'
+        # Check only on main (not pull request)
+        if: github.ref == 'refs/heads/main'
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
