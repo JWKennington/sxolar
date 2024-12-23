@@ -150,6 +150,11 @@ class Section:
             alls=alls,
         )
 
+        # Check if trailing is nested dict
+        if isinstance(trailing, dict):
+            trailing_unit = trailing.get("unit", "days")
+            trailing = trailing.get("num", None)
+
         return Section(
             name=name,
             query=query,
