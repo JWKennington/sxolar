@@ -7,7 +7,7 @@ from sxolar.util import gmail
 class TestGmail:
     """Test the gmail module"""
 
-    @pytest.skip("Something about smtp is broken in pytest")
+    @pytest.mark.skip("Something about smtp is broken in pytest")
     def test_send_email(self):
         """Test the send_email function"""
         body = (

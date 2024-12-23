@@ -89,6 +89,7 @@ class TestSection:
             "[1005.5383v1]\n"
             "Adrian Del Maestro, Ian Affleck\n"
             "\n"
+            "http://arxiv.org/abs/1005.5383v1\n"
         )
 
     def test_format_entry_html(self, results):
@@ -114,11 +115,13 @@ class TestSection:
             "[1005.5383v1]\n"
             "Adrian Del Maestro, Ian Affleck\n"
             "\n"
+            "http://arxiv.org/abs/1005.5383v1\n"
             "\n"
             "Quantum Monte Carlo measurement of the chemical potential of helium-4 "
             "[1312.6177v1]\n"
             "C. M. Herdman, A. Rommal, A. Del Maestro\n"
             "\n"
+            "http://arxiv.org/abs/1312.6177v1\n"
         )
 
     def test_to_html(self, results):
@@ -257,6 +260,7 @@ class TestSummary:
             "[1005.5383v1]\n"
             "Adrian Del Maestro, Ian Affleck\n"
             "\n"
+            "http://arxiv.org/abs/1005.5383v1\n"
             "\n"
             "\n"
             "TestSec2:\n"
@@ -264,6 +268,7 @@ class TestSummary:
             "[1312.6177v1]\n"
             "C. M. Herdman, A. Rommal, A. Del Maestro\n"
             "\n"
+            "http://arxiv.org/abs/1312.6177v1\n"
         )
 
     def test_to_html(self, results):
