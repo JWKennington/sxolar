@@ -3,7 +3,7 @@ with overridden magic methods for syntactic sugar
 """
 
 import datetime
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 from sxolar.api import arxiv
 from sxolar.api.arxiv import (
@@ -23,14 +23,21 @@ class Query:
         operator (str): The operator to use
     """
 
-    def __init__(self, value: str):
+    def __init__(
+        self,
+        value: str,
+        filter_authors: List[str] = None,
+    ):
         """Creates a new query
 
         Args:
             value:
                 str, the value to search for
+            filter_authors:
+                List[str], the authors to filter by
         """
         self.value = value
+        self.filter_authors = filter_authors or []
 
     def __str__(self):
         """Returns the string representation of the query"""
@@ -58,7 +65,10 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f"{self}{LogicalOperator.AND}{other}")
+        return Query(
+            f"{self}{LogicalOperator.AND}{other}",
+            filter_authors=list(set(self.filter_authors) & set(other.filter_authors)),
+        )
 
     def and_not(self, other):
         """Join two queries with the AND NOT operator
@@ -70,7 +80,10 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f"{self}{LogicalOperator.AND_NOT}{other}")
+        return Query(
+            f"{self}{LogicalOperator.AND_NOT}{other}",
+            filter_authors=list(set(self.filter_authors) - set(other.filter_authors)),
+        )
 
     def or_(self, other):
         """Join two queries with the OR operator
@@ -82,7 +95,10 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f"{self}{LogicalOperator.OR}{other}")
+        return Query(
+            f"{self}{LogicalOperator.OR}{other}",
+            filter_authors=list(set(self.filter_authors) | set(other.filter_authors)),
+        )
 
     def join(
         self, *others: Iterable["Query"], operator: LogicalOperator = LogicalOperator.OR
@@ -102,10 +118,12 @@ class Query:
             return self
 
         value = self.value
+        authors = set(self.filter_authors)
         for other in others:
             value = f"{value}{operator}{other}"
+            authors |= set(other.filter_authors)
 
-        return Query(value).wrap()
+        return Query(value, filter_authors=list(sorted(authors))).wrap()
 
     def wrap(self):
         """Wrap the query in parenthesis
@@ -113,7 +131,7 @@ class Query:
         Returns:
             Query: A new query object
         """
-        return Query(f"({self})")
+        return Query(f"({self})", filter_authors=self.filter_authors)
 
     def search(
         self,
@@ -136,7 +154,7 @@ class Query:
         Returns:
             list: A list of dictionaries representing the search results
         """
-        return arxiv._query(
+        results = arxiv._query(
             self.value,
             id_list=None,
             start=start,
@@ -147,6 +165,14 @@ class Query:
             max_date=max_date,
             date_filter_field=date_filter_field,
         )
+
+        # Apply filter authors if any
+        if self.filter_authors:
+            results = [
+                entry for entry in results if entry.filter_authors(self.filter_authors)
+            ]
+
+        return results
 
     def to_str(self) -> str:
         """Returns the string representation of the query"""
@@ -255,6 +281,7 @@ class Query:
         journal_refs: Iterable[str] = None,
         categories: Iterable[str] = None,
         operator: LogicalOperator = LogicalOperator.AND,
+        filter_authors: bool = False,
     ):
         """Creates a new combo query
 
@@ -289,6 +316,10 @@ class Query:
         query = queries[0]
         if queries[1:]:
             query = query.join(*queries[1:], operator=operator)
+
+        # Add author filters if needed
+        if filter_authors and authors:
+            query.filter_authors = list(set(authors))
 
         return query
 

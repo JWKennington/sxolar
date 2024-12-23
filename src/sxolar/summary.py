@@ -136,6 +136,7 @@ class Section:
         max_results: int = 50,
         trailing: Optional[int] = None,
         trailing_unit: str = "days",
+        filter_authors: bool = False,
     ) -> "Section":
         """Create a section from a combination of arguments
 
@@ -148,6 +149,7 @@ class Section:
         query = Query.from_combo(
             authors=authors,
             alls=alls,
+            filter_authors=filter_authors,
         )
 
         # Check if trailing is nested dict

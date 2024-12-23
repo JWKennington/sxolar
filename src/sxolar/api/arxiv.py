@@ -234,6 +234,18 @@ class Entry:
             category=data[FIELD_ENTRY_CATEGORY],
         )
 
+    def filter_authors(self, authors: List[str]) -> bool:
+        """Check if the entry has any of the given authors.
+
+        Args:
+            authors:
+                List[str], the list of authors to check for.
+
+        Returns:
+            bool: True if the entry has any of the authors, False otherwise.
+        """
+        return any(author.name in authors for author in self.author)
+
 
 class SortBy(str, enum.Enum):
     """Enumeration of sort fields for the Arxiv API [3]"""
@@ -514,6 +526,7 @@ def _query(
     min_date: datetime.datetime = None,
     max_date: datetime.datetime = None,
     date_filter_field: str = FIELD_ENTRY_UPDATED,
+
 ) -> List[Entry]:
     """Query the Arxiv API with the given parameters.
 

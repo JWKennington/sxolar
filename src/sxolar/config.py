@@ -48,7 +48,6 @@ class Config:
 
     Args:
         named_queries: A dictionary of named queries
-
     """
 
     info: dict
