@@ -130,7 +130,9 @@ class Section:
     def from_combo(
         name: str,
         authors: List[str] = None,
+        titles: List[str] = None,
         alls: List[str] = None,
+        categories: List[str] = None,
         max_authors: int = 3,
         include_abstract: bool = False,
         max_results: int = 50,
@@ -156,7 +158,9 @@ class Section:
 
             query = Query.from_combo(
                 authors=authors,
+                titles=titles,
                 alls=alls,
+                categories=categories,
                 filter_authors=filter_authors,
                 alls_operator=alls_operator,
             )
