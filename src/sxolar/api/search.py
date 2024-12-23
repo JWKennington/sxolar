@@ -173,7 +173,7 @@ class Query:
         authors = [Author(author) for author in authors]
         query = authors[0]
         if authors[1:]:
-            query = query.join(authors[1:], operator=LogicalOperator.OR)
+            query = query.join(*authors[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -187,7 +187,7 @@ class Query:
         titles = [Title(title) for title in titles]
         query = titles[0]
         if titles[1:]:
-            query = query.join(titles[1:], operator=LogicalOperator.OR)
+            query = query.join(*titles[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -201,7 +201,7 @@ class Query:
         abstracts = [Abstract(abstract) for abstract in abstracts]
         query = abstracts[0]
         if abstracts[1:]:
-            query = query.join(abstracts[1:], operator=LogicalOperator.OR)
+            query = query.join(*abstracts[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -215,7 +215,7 @@ class Query:
         alls = [All(all_) for all_ in alls]
         query = alls[0]
         if alls[1:]:
-            query = query.join(alls[1:], operator=LogicalOperator.OR)
+            query = query.join(*alls[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -229,7 +229,7 @@ class Query:
         journal_refs = [JournalRef(journal_ref) for journal_ref in journal_refs]
         query = journal_refs[0]
         if journal_refs[1:]:
-            query = query.join(journal_refs[1:], operator=LogicalOperator.OR)
+            query = query.join(*journal_refs[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -243,7 +243,7 @@ class Query:
         categories = [Category(category) for category in categories]
         query = categories[0]
         if categories[1:]:
-            query = query.join(categories[1:], operator=LogicalOperator.OR)
+            query = query.join(*categories[1:], operator=LogicalOperator.OR)
         return query
 
     @staticmethod
@@ -288,7 +288,7 @@ class Query:
 
         query = queries[0]
         if queries[1:]:
-            query = query.join(queries[1:], operator=operator)
+            query = query.join(*queries[1:], operator=operator)
 
         return query
 

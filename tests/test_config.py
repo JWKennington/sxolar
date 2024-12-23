@@ -57,3 +57,15 @@ class TestConfig:
             "summary name 1",
             "summary name 2",
         ]
+
+        # Check details of summary objects
+        summary = config.summaries["summary name 1"]
+        assert summary.name == "summary name 1"
+        assert len(summary.sections) == 2
+        assert (
+            summary.sections[0].name
+            == "Section 1: Topic A x Authors 1, 2 | Recent 2 Weeks"
+        )
+        assert str(summary.sections[0].query) == (
+            "((au:Author 1 OR au:Author 2) AND all:Topic A)"
+        )

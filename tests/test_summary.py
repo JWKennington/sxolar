@@ -6,7 +6,7 @@ import datetime
 import pytest
 
 from sxolar.api.arxiv import Author, Category, Entry, Identifier
-from sxolar.summary import Format, Section
+from sxolar.summary import Format, Section, Summary
 
 
 class TestSummary:
@@ -71,7 +71,7 @@ class TestSummary:
 
     def test_init(self):
         """Test the summary class"""
-        smy = Section("Test", [])
+        smy = Section("Test", None, [])
         assert isinstance(smy, Section)
         assert smy.name == "Test"
         assert smy.results == []
@@ -80,7 +80,7 @@ class TestSummary:
 
     def test_format_entry_plain(self, results):
         """Test the format_entry method"""
-        smy = Section("TestPlain", results)
+        smy = Section("TestPlain", query=None, results=results)
         entry = smy.results[0]
         entry_str = smy._format_entry(entry, Format.Plain)
         assert isinstance(entry_str, str)
@@ -93,7 +93,7 @@ class TestSummary:
 
     def test_format_entry_html(self, results):
         """Test the format_entry method"""
-        smy = Section("TestPlain", results)
+        smy = Section("TestPlain", query=None, results=results)
         entry = smy.results[0]
         entry_str = smy._format_entry(entry, Format.Html)
         assert isinstance(entry_str, str)
@@ -105,7 +105,7 @@ class TestSummary:
 
     def test_to_text(self, results):
         """Test the to_text method"""
-        smy = Section("TestPlain", results)
+        smy = Section("TestPlain", query=None, results=results)
         text = smy.to_text()
         assert isinstance(text, str)
         assert text == (
@@ -123,7 +123,7 @@ class TestSummary:
 
     def test_to_html(self, results):
         """Test the to_html method"""
-        smy = Section("TestHtml", results)
+        smy = Section("TestHtml", query=None, results=results)
         html = smy.to_html()
         assert isinstance(html, str)
         assert html == (
@@ -135,4 +135,98 @@ class TestSummary:
             "measurement of the chemical potential of helium-4 "
             "[1312.6177v1]</a></h3><br>C. M. Herdman, A. Rommal, A. Del "
             "Maestro<br><br></p>"
+        )
+
+    def test_refresh_section(self):
+        """Test the refresh method"""
+        smy = Section.from_combo("Test1", authors=["Adrian Del Maestro"])
+        smy.refresh()
+        assert smy.results is not None
+        assert len(smy.results) == 50
+        assert isinstance(smy.results[0], Entry)
+        assert smy.results[0].author == [
+            Author(name="Adrian Del Maestro", affiliation=None),
+            Author(name="Ian Affleck", affiliation=None),
+        ]
+        assert smy.results[0].category == [
+            Category(
+                term="cond-mat.stat-mech",
+                scheme="http://arxiv.org/schemas/atom",
+            )
+        ]
+        assert smy.results[0].id == Identifier(
+            number="1005.5383", version="1", is_new=True
+        )
+        assert smy.results[0].published == datetime.datetime(
+            2010, 5, 28, 20, 0, 5, tzinfo=datetime.timezone.utc
+        )
+        assert smy.results[0].summary == (
+            "  Harmonically trapped ultra-cold atoms and helium-4 in nanopores provide "
+            "new\n"
+            "experimental realizations of bosons in one dimension, motivating the search "
+            "for\n"
+            "a more complete theoretical understanding of their low energy properties. "
+            "Worm\n"
+            "algorithm path integral quantum Monte Carlo results for interacting bosons\n"
+            "restricted to the one dimensional continuum are compared to the finite\n"
+            "temperature and system size predictions of Luttinger liquid theory. For "
+            "large\n"
+            "system sizes at low temperature, excellent agreement is obtained after\n"
+            "including the leading irrelevant interactions in the Hamiltonian which are\n"
+            "determined explicitly.\n"
+        )
+        assert (
+            smy.results[0].title
+            == "Interacting bosons in one dimension and Luttinger liquid theory"
+        )
+        assert smy.results[0].updated == datetime.datetime(
+            2010, 5, 28, 20, 0, 5, tzinfo=datetime.timezone.utc
+        )
+
+    def test_refresh(self):
+        """Test the refresh method"""
+        sec = Section.from_combo("Test1", authors=["Adrian Del Maestro"])
+        smy = Summary("Test", [sec])
+        smy.refresh()
+        smy = smy.sections[0]
+        assert smy.results is not None
+        assert len(smy.results) == 50
+        assert isinstance(smy.results[0], Entry)
+        assert smy.results[0].author == [
+            Author(name="Adrian Del Maestro", affiliation=None),
+            Author(name="Ian Affleck", affiliation=None),
+        ]
+        assert smy.results[0].category == [
+            Category(
+                term="cond-mat.stat-mech",
+                scheme="http://arxiv.org/schemas/atom",
+            )
+        ]
+        assert smy.results[0].id == Identifier(
+            number="1005.5383", version="1", is_new=True
+        )
+        assert smy.results[0].published == datetime.datetime(
+            2010, 5, 28, 20, 0, 5, tzinfo=datetime.timezone.utc
+        )
+        assert smy.results[0].summary == (
+            "  Harmonically trapped ultra-cold atoms and helium-4 in nanopores provide "
+            "new\n"
+            "experimental realizations of bosons in one dimension, motivating the search "
+            "for\n"
+            "a more complete theoretical understanding of their low energy properties. "
+            "Worm\n"
+            "algorithm path integral quantum Monte Carlo results for interacting bosons\n"
+            "restricted to the one dimensional continuum are compared to the finite\n"
+            "temperature and system size predictions of Luttinger liquid theory. For "
+            "large\n"
+            "system sizes at low temperature, excellent agreement is obtained after\n"
+            "including the leading irrelevant interactions in the Hamiltonian which are\n"
+            "determined explicitly.\n"
+        )
+        assert (
+            smy.results[0].title
+            == "Interacting bosons in one dimension and Luttinger liquid theory"
+        )
+        assert smy.results[0].updated == datetime.datetime(
+            2010, 5, 28, 20, 0, 5, tzinfo=datetime.timezone.utc
         )
