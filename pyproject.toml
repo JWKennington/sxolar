@@ -31,7 +31,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/JWKennington/sxolar"
-Documentation = "https://github.com/JWKennington/sxolar"
+Documentation = "https://www.sxolar.org"
 Issues = "https://github.com/JWKennington/sxolar/issues"
 
 [project.scripts]
