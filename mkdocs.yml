@@ -2,6 +2,16 @@ site_name: Sxolar
 
 nav:
   - Home: index.md
+  - Tutorials:
+    - Simple Query: tutorials/simple-query.md
+    - Simple Summary: tutorials/simple-summary.md
+    - Setup Periodic Digest Emails: tutorials/setup-periodic.md
+  - User Guide:
+    - Key Concepts: user-guide/concepts.md
+    - High-Level Interface: user-guide/high-level.md
+    - Low-Level Interface: user-guide/low-level.md
+    - Command Line Interface: user-guide/command-line.md
+    - Configuration: user-guide/config-files.md
   - API:
     - API:
       - Low-Level Interface: api/api/arxiv.md
