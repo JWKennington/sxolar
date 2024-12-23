@@ -15,7 +15,15 @@ except KeyError:
     EMAIL_APP_PASSWORD = None
 
 
-def send_email(subject: str, to: str, body: str, safe: bool = True):
+def send_email(
+    subject: str,
+    to: list[str],
+    body: str,
+    from_email: str = EMAIL_SENDER,
+    safe: bool = True,
+    is_plain: bool = True,
+    app_password: str = EMAIL_APP_PASSWORD,
+):
     """Send an email using Gmail.
 
     Args:
@@ -25,30 +33,43 @@ def send_email(subject: str, to: str, body: str, safe: bool = True):
             str, The email address to send the email to.
         body:
             str, The body of the email.
+        from_email:
+            str, default EMAIL_SENDER, the email address to send the email from.
+        safe:
+            bool, default True, whether to suppress exceptions when sending the email.
+        is_plain:
+            bool, default True, whether the email is plain text or html.
+        app_password:
+            str, default EMAIL_APP_PASSWORD, the app password for the Gmail account.
     """
-    if EMAIL_APP_PASSWORD is None:
+    if app_password is None:
         raise ValueError(
             f"Please set the {EMAIL_APP_PASSWORD_ENV_KEY} environment variable to "
-            f"your Gmail app password."
+            f"your Gmail app password or specify it as the app_password argument."
         )
 
     # Create a multipart message and set headers
     message = MIMEMultipart("alternative")
     message["Subject"] = subject
     message["From"] = EMAIL_SENDER
-    message["To"] = to
+    message["To"] = ", ".join(to)
 
-    html_content = f"""\
-    <html>
-      <body>
-        <p>{body}</p>
-      </body>
-    </html>
-    """
+    # Check if the email is plain text or html
+    if is_plain:
+        part = MIMEText(body, "plain")
+        message.attach(part)
+    else:
+        html_content = f"""\
+        <html>
+          <body>
+            {body}
+          </body>
+        </html>
+        """
 
-    # Turn these into MIMEText objects and attach them to the MIMEMultipart message
-    part = MIMEText(html_content, "html")
-    message.attach(part)
+        # Turn these into MIMEText objects and attach them to the MIMEMultipart message
+        part = MIMEText(html_content, "html")
+        message.attach(part)
 
     # Connect to Gmail's SMTP server and send the email
     try:
@@ -59,7 +80,7 @@ def send_email(subject: str, to: str, body: str, safe: bool = True):
         # Establish a secure session using starttls
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
-            server.login(EMAIL_SENDER, EMAIL_APP_PASSWORD)
+            server.login(from_email, app_password)
             server.send_message(message)
 
     except Exception as e:

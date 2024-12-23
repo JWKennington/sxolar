@@ -34,6 +34,9 @@ Homepage = "https://github.com/JWKennington/sxolar"
 Documentation = "https://github.com/JWKennington/sxolar"
 Issues = "https://github.com/JWKennington/sxolar/issues"
 
+[project.scripts]
+sxolar = "sxolar.bin.sxolar:main"
+
 [project.optional-dependencies]
 docs = [
     "mkdocs",
@@ -92,7 +95,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-p no:warnings --cov=sxolar --markdown-docs --markdown-docs-syntax=superfences"
+#addopts = "-p no:warnings --cov=sxolar --markdown-docs --markdown-docs-syntax=superfences"
 
 [tool.flake8]
 max-line-length = 88

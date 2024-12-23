@@ -52,6 +52,11 @@ class TestQuery:
         res = Author('del maestro').search()
         assert len(res) == 10
 
+    def test_join(self):
+        """Test the join function"""
+        res = Author('del maestro').join(Title('checkerboard'))
+        assert str(res) == '(au:del maestro OR ti:checkerboard)'
+
 
 class TestSearchFieldClasses:
     """Test the search field classes"""

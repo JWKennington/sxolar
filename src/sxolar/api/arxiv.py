@@ -5,19 +5,22 @@ References:
     [1] API Basics: https://info.arxiv.org/help/api/basics.html
     [2] Rate Limits: https://info.arxiv.org/help/api/tou.html
     [3] Search Query Language: https://info.arxiv.org/help/api/user-manual.html
-    #query_details
+        #query_details
     [4] Entry output format: https://info.arxiv.org/help/api/user-manual.html
-    #_entry_metadata
+        #_entry_metadata
+    [5] ArXiv identifier format: https://info.arxiv.org/help/arxiv_identifier.html
 """
 
 import collections
 import datetime
 import enum
+import re
+from dataclasses import dataclass
 from typing import List, Union
 from urllib import parse
-from defusedxml import ElementTree as SecureElementTree
 from xml.etree import ElementTree
 
+from defusedxml import ElementTree as SecureElementTree
 from requests_ratelimiter import LimiterSession
 
 # Impose the public ratelimit by default [2]
@@ -41,6 +44,19 @@ TAG_AFFILIATION = "affiliation"
 TAG_CATEGORY = "category"
 TAG_TERM = "term"
 TAG_SCHEME = "scheme"
+
+# Identifier schema (NEW)
+ID_PREFIX = "http://arxiv.org/abs/"
+ID_NUM_PATTERN_NEW = r"[0-9]{4}\.[0-9]{4,5}"
+ID_VERSION_PATTERN_NEW = "[0-9]+"
+# ID Pattern with named groups for the number and version
+ID_PATTERN_NEW = (
+    f"(?P<number>{ID_NUM_PATTERN_NEW})(?:v(?P<version" f">{ID_VERSION_PATTERN_NEW}))?"
+)
+
+# Identifier schema (OLD) example: math.GT/0309136
+ID_NUM_PATTERN = "[a-z-]+/[0-9]{6,8}"
+ID_PATTERN_OLD = f"(?P<number>{ID_NUM_PATTERN})"
 
 # Define author fields
 FIELD_AUTHOR_NAME = "name"
@@ -77,14 +93,163 @@ FIELDS_ENTRY = (
 )
 
 
-# Define the Entry output formats for the Arxiv API [4]
-Entry = collections.namedtuple("Entry", " ".join(FIELDS_ENTRY))
-Author = collections.namedtuple("Author", " ".join(FIELDS_AUTHOR))
 Category = collections.namedtuple("Category", " ".join(FIELDS_CATEGORY))
+
+
+@dataclass
+class Author:
+    """A dataclass for an author of an Arxiv entry.
+
+    Args:
+        name:
+            str, the name of the author.
+        affiliation:
+            str, the affiliation of the author.
+    """
+
+    name: str
+    affiliation: str
+
+    def __str__(self) -> str:
+        """Return the author as a string."""
+        return self.name
+
+
+@dataclass
+class Identifier:
+    """A dataclass for an Arxiv identifier.
+
+    Args:
+        number:
+            str, the number of the identifier.
+        version:
+            str, the version of the identifier.
+        is_new:
+            bool, whether the identifier is in the new format.
+    """
+
+    number: str
+    version: str
+    is_new: bool
+
+    def __str__(self) -> str:
+        """Return the identifier as a string."""
+        if self.is_new:
+            return f"{self.number}v{self.version}" if self.version else self.number
+        return self.number
+
+    def link(self) -> str:
+        """Formatted arxiv link for the identifier"""
+        return f"{ID_PREFIX}{self}"
+
+
+def parse_identifier(id_text: str) -> Identifier:
+    """Parse an Arxiv identifier into its components.
+
+    Args:
+        id_text:
+            str, the Arxiv identifier to parse.
+    """
+    # Check if the identifier starts with the url prefix, if so remove
+    if id_text.startswith(ID_PREFIX):
+        id_text = id_text[len(ID_PREFIX) :]
+
+    # Check if the identifier is in the new format
+    match = re.match(ID_PATTERN_NEW, id_text)
+    if match:
+        return Identifier(
+            number=match.group("number"),
+            version=match.group("version"),
+            is_new=True,
+        )
+
+    # Check if the identifier is in the old format
+    match = re.match(ID_PATTERN_OLD, id_text)
+    if match:
+        return Identifier(
+            number=match.group("number"),
+            version=None,
+            is_new=False,
+        )
+
+    # If the identifier does not match either pattern, raise an error
+    raise ValueError(f"Invalid Arxiv identifier: {id_text}")
+
+
+@dataclass
+class Entry:
+    """A dataclass for an entry from the Arxiv API [4]
+
+    Args:
+        title:
+            str, the title of the entry
+        id:
+            str, the Arxiv ID of the entry
+        published:
+            datetime.datetime, the published date of the entry
+        updated:
+            datetime.datetime, the updated date of the entry
+        summary:
+            str, the summary of the entry
+        author:
+            List[Author], the authors of the entry
+        category:
+            List[Category], the categories of the entry
+    """
+
+    title: str
+    id: Identifier
+    published: datetime.datetime
+    updated: datetime.datetime
+    summary: str
+    author: List[Author]
+    category: List[Category]
+
+    def link(self) -> str:
+        """Formatted arxiv link for the entry"""
+        return f"https://arxiv.org/abs/{self.id}"
+
+    def to_dict(self) -> dict:
+        """Return the entry as a dictionary."""
+        return {
+            FIELD_ENTRY_TITLE: self.title,
+            FIELD_ENTRY_ID: self.id,
+            FIELD_ENTRY_PUBLISHED: self.published,
+            FIELD_ENTRY_UPDATED: self.updated,
+            FIELD_ENTRY_SUMMARY: self.summary,
+            FIELD_ENTRY_AUTHOR: self.author,
+            FIELD_ENTRY_CATEGORY: self.category,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Entry":
+        """Create an entry from a dictionary."""
+        return Entry(
+            title=data[FIELD_ENTRY_TITLE],
+            id=data[FIELD_ENTRY_ID],
+            published=data[FIELD_ENTRY_PUBLISHED],
+            updated=data[FIELD_ENTRY_UPDATED],
+            summary=data[FIELD_ENTRY_SUMMARY],
+            author=data[FIELD_ENTRY_AUTHOR],
+            category=data[FIELD_ENTRY_CATEGORY],
+        )
+
+    def filter_authors(self, authors: List[str]) -> bool:
+        """Check if the entry has any of the given authors.
+
+        Args:
+            authors:
+                List[str], the list of authors to check for.
+
+        Returns:
+            bool: True if the entry has any of the authors, False otherwise.
+        """
+        return any(author.name in authors for author in self.author)
 
 
 class SortBy(str, enum.Enum):
     """Enumeration of sort fields for the Arxiv API [3]"""
+
     Relevance = "relevance"
     LastUpdatedDate = "lastUpdatedDate"
     SubmittedDate = "submittedDate"
@@ -92,6 +257,7 @@ class SortBy(str, enum.Enum):
 
 class SortOrder(str, enum.Enum):
     """Enumeration of sort orders for the Arxiv API [3]"""
+
     Ascending = "ascending"
     Descending = "descending"
 
@@ -170,10 +336,14 @@ def parse_entry(entry: ElementTree.Element) -> Entry:
     if updated is not None:
         updated = datetime.datetime.fromisoformat(updated)
 
+    # Parse components of the identifier
+    raw_id = find(entry, TAG_ID)
+    id_ = parse_identifier(raw_id)
+
     # Return the parsed entry
     return Entry(
         title=find(entry, TAG_TITLE),
-        id=find(entry, TAG_ID),
+        id=id_,
         published=published,
         updated=updated,
         summary=find(entry, TAG_SUMMARY),
@@ -353,7 +523,11 @@ def _query(
     max_results: int = 10,
     sort_by: SortBy = SortBy.Relevance,
     sort_order: SortOrder = SortOrder.Descending,
-) -> dict:
+    min_date: datetime.datetime = None,
+    max_date: datetime.datetime = None,
+    date_filter_field: str = FIELD_ENTRY_UPDATED,
+
+) -> List[Entry]:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -371,7 +545,7 @@ def _query(
             SortOrder, optional, The order to sort by. Defaults to SortOrder.Descending.
 
     Returns:
-        dict: The parsed response from the API
+        List[Entry]: The list of entries returned by the query.
     """
     # Define the parameters for the query
     params = {
@@ -387,7 +561,21 @@ def _query(
     params = {k: v for k, v in params.items() if v is not None}
 
     # Get and parse the response
-    return get_and_parse(URL_QUERY, params)
+    results = get_and_parse(URL_QUERY, params)
+
+    # Filter for dates if specified
+    if date_filter_field not in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
+        raise ValueError(
+            f"Invalid date filter field: {date_filter_field}, options "
+            f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
+        )
+    if min_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) >= min_date]
+    if max_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) <= max_date]
+
+    # Return the results
+    return results
 
 
 def query(
@@ -409,7 +597,7 @@ def query(
     min_date: datetime.datetime = None,
     max_date: datetime.datetime = None,
     date_filter_field: str = FIELD_ENTRY_UPDATED,
-) -> dict:
+) -> List[Entry]:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -472,18 +660,14 @@ def query(
         raise ValueError("No search query provided; cannot query the entire Arxiv.")
 
     # Query the API
-    results = _query(search_query, id_list, start, max_results, sort_by, sort_order)
-
-    # Filter for dates if specified
-    if date_filter_field not in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
-        raise ValueError(
-            f"Invalid date filter field: {date_filter_field}, options "
-            f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
-        )
-    if min_date is not None:
-        results = [r for r in results if getattr(r, date_filter_field) >= min_date]
-    if max_date is not None:
-        results = [r for r in results if getattr(r, date_filter_field) <= max_date]
-
-    # Return the results
-    return results
+    return _query(
+        search_query=search_query,
+        id_list=id_list,
+        start=start,
+        max_results=max_results,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        min_date=min_date,
+        max_date=max_date,
+        date_filter_field=date_filter_field,
+    )
