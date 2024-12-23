@@ -44,19 +44,22 @@ def send_email(
     message["From"] = EMAIL_SENDER
     message["To"] = to
 
-    
+    # Check if the email is plain text or html
+    if is_plain:
+        part = MIMEText(body, "plain")
+        message.attach(part)
+    else:
+        html_content = f"""\
+        <html>
+          <body>
+            {body}
+          </body>
+        </html>
+        """
 
-    html_content = f"""\
-    <html>
-      <body>
-        <p>{body}</p>
-      </body>
-    </html>
-    """
-
-    # Turn these into MIMEText objects and attach them to the MIMEMultipart message
-    part = MIMEText(html_content, "html")
-    message.attach(part)
+        # Turn these into MIMEText objects and attach them to the MIMEMultipart message
+        part = MIMEText(html_content, "html")
+        message.attach(part)
 
     # Connect to Gmail's SMTP server and send the email
     try:
