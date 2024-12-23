@@ -36,7 +36,7 @@ results = query.search(max_results=5)
 for result in results:
     print(result.title)
     print(result.author)
-    print(result.abstract)
+    print(result.summary)
     print()
 ```
 
@@ -71,7 +71,7 @@ results = query.search(
 for result in results:
     print(result.title)
     print(result.author)
-    print(result.abstract)
+    print(result.summary)
     print()
 ```
 
