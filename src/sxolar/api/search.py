@@ -231,7 +231,7 @@ class Query:
         return query
 
     @staticmethod
-    def from_alls(*alls: Iterable[str]):
+    def from_alls(*alls: Iterable[str], operator: LogicalOperator = LogicalOperator.OR):
         """Creates a new all query
 
         Args:
@@ -241,7 +241,7 @@ class Query:
         alls = [All(all_) for all_ in alls]
         query = alls[0]
         if alls[1:]:
-            query = query.join(*alls[1:], operator=LogicalOperator.OR)
+            query = query.join(*alls[1:], operator=operator)
         return query
 
     @staticmethod
@@ -282,6 +282,7 @@ class Query:
         categories: Iterable[str] = None,
         operator: LogicalOperator = LogicalOperator.AND,
         filter_authors: bool = False,
+        alls_operator: LogicalOperator = LogicalOperator.OR,
     ):
         """Creates a new combo query
 
@@ -307,7 +308,7 @@ class Query:
         if abstracts:
             queries.append(Query.from_abstracts(*abstracts))
         if alls:
-            queries.append(Query.from_alls(*alls))
+            queries.append(Query.from_alls(*alls, operator=alls_operator))
         if journal_refs:
             queries.append(Query.from_journal_refs(*journal_refs))
         if categories:

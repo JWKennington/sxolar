@@ -6,7 +6,7 @@ import enum
 from dataclasses import dataclass
 from typing import List, Optional
 
-from sxolar.api.arxiv import Entry, SortBy, SortOrder
+from sxolar.api.arxiv import Entry, LogicalOperator, SortBy, SortOrder
 from sxolar.api.search import Query
 
 
@@ -137,20 +137,29 @@ class Section:
         trailing: Optional[int] = None,
         trailing_unit: str = "days",
         filter_authors: bool = False,
+        alls_operator: str = LogicalOperator.OR,
+        value: str = None,
     ) -> "Section":
         """Create a section from a combination of arguments
 
         Args:
 
         """
-        if authors is None and alls is None:
-            raise ValueError("At least one of authors or alls must be specified")
+        # Check for fully formed query
+        if value is not None:
+            query = Query(value, filter_authors=authors if filter_authors else None)
 
-        query = Query.from_combo(
-            authors=authors,
-            alls=alls,
-            filter_authors=filter_authors,
-        )
+        # Check for authors or alls
+        else:
+            if authors is None and alls is None:
+                raise ValueError("At least one of authors or alls must be specified")
+
+            query = Query.from_combo(
+                authors=authors,
+                alls=alls,
+                filter_authors=filter_authors,
+                alls_operator=alls_operator,
+            )
 
         # Check if trailing is nested dict
         if isinstance(trailing, dict):
