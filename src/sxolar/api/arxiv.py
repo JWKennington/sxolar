@@ -47,7 +47,7 @@ TAG_SCHEME = "scheme"
 
 # Identifier schema (NEW)
 ID_PREFIX = "http://arxiv.org/abs/"
-ID_NUM_PATTERN_NEW = "[0-9]{4}\.[0-9]{4,5}"
+ID_NUM_PATTERN_NEW = r"[0-9]{4}\.[0-9]{4,5}"
 ID_VERSION_PATTERN_NEW = "[0-9]+"
 # ID Pattern with named groups for the number and version
 ID_PATTERN_NEW = (
