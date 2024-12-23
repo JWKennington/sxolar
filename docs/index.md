@@ -10,9 +10,9 @@ A command line interface is also provided for easy access to the tools from a sh
 The core tools are designed to be used in place of the `Arxiv API <https://arxiv.org/help/api/index>`, 
 with a simpler interface and more features, including
 
-* Searching and downloading papers
-* Creating personalized search indices for easy repeated searches
-* Exploring the network of citations between papers
+* Searching and filtering papers
+* Creating personalized search summaries 
+* Persisting useful searches for automated search digests
 
 Ultimately, the goal of this project is to provide a set of tools that can be used to build a personalized search engine
 for academic papers, with the ability to search, download, and explore the network of citations between papers.
