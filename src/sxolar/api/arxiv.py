@@ -511,7 +511,10 @@ def _query(
     max_results: int = 10,
     sort_by: SortBy = SortBy.Relevance,
     sort_order: SortOrder = SortOrder.Descending,
-) -> dict:
+    min_date: datetime.datetime = None,
+    max_date: datetime.datetime = None,
+    date_filter_field: str = FIELD_ENTRY_UPDATED,
+) -> List[Entry]:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -529,7 +532,7 @@ def _query(
             SortOrder, optional, The order to sort by. Defaults to SortOrder.Descending.
 
     Returns:
-        dict: The parsed response from the API
+        List[Entry]: The list of entries returned by the query.
     """
     # Define the parameters for the query
     params = {
@@ -545,7 +548,21 @@ def _query(
     params = {k: v for k, v in params.items() if v is not None}
 
     # Get and parse the response
-    return get_and_parse(URL_QUERY, params)
+    results = get_and_parse(URL_QUERY, params)
+
+    # Filter for dates if specified
+    if date_filter_field not in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
+        raise ValueError(
+            f"Invalid date filter field: {date_filter_field}, options "
+            f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
+        )
+    if min_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) >= min_date]
+    if max_date is not None:
+        results = [r for r in results if getattr(r, date_filter_field) <= max_date]
+
+    # Return the results
+    return results
 
 
 def query(
@@ -567,7 +584,7 @@ def query(
     min_date: datetime.datetime = None,
     max_date: datetime.datetime = None,
     date_filter_field: str = FIELD_ENTRY_UPDATED,
-) -> dict:
+) -> List[Entry]:
     """Query the Arxiv API with the given parameters.
 
     Args:
@@ -630,18 +647,14 @@ def query(
         raise ValueError("No search query provided; cannot query the entire Arxiv.")
 
     # Query the API
-    results = _query(search_query, id_list, start, max_results, sort_by, sort_order)
-
-    # Filter for dates if specified
-    if date_filter_field not in (FIELD_ENTRY_PUBLISHED, FIELD_ENTRY_UPDATED):
-        raise ValueError(
-            f"Invalid date filter field: {date_filter_field}, options "
-            f"are {FIELD_ENTRY_PUBLISHED} or {FIELD_ENTRY_UPDATED}"
-        )
-    if min_date is not None:
-        results = [r for r in results if getattr(r, date_filter_field) >= min_date]
-    if max_date is not None:
-        results = [r for r in results if getattr(r, date_filter_field) <= max_date]
-
-    # Return the results
-    return results
+    return _query(
+        search_query=search_query,
+        id_list=id_list,
+        start=start,
+        max_results=max_results,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        min_date=min_date,
+        max_date=max_date,
+        date_filter_field=date_filter_field,
+    )

@@ -2,10 +2,17 @@
 with overridden magic methods for syntactic sugar
 """
 
+import datetime
 from typing import Iterable, Union
 
 from sxolar.api import arxiv
-from sxolar.api.arxiv import LogicalOperator, SearchField
+from sxolar.api.arxiv import (
+    FIELD_ENTRY_UPDATED,
+    LogicalOperator,
+    SearchField,
+    SortBy,
+    SortOrder,
+)
 
 
 class Query:
@@ -108,7 +115,16 @@ class Query:
         """
         return Query(f"({self})")
 
-    def search(self, start: int = 0, max_results: int = 10):
+    def search(
+        self,
+        start: int = 0,
+        max_results: int = 10,
+        sort_by: SortBy = SortBy.Relevance,
+        sort_order: SortOrder = SortOrder.Descending,
+        min_date: datetime.datetime = None,
+        max_date: datetime.datetime = None,
+        date_filter_field: str = FIELD_ENTRY_UPDATED,
+    ):
         """Searches the arxiv API with the query
 
         Args:
@@ -121,7 +137,15 @@ class Query:
             list: A list of dictionaries representing the search results
         """
         return arxiv._query(
-            self.value, id_list=None, start=start, max_results=max_results
+            self.value,
+            id_list=None,
+            start=start,
+            max_results=max_results,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            min_date=min_date,
+            max_date=max_date,
+            date_filter_field=date_filter_field,
         )
 
     def to_str(self) -> str:

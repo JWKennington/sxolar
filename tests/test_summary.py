@@ -6,7 +6,7 @@ import datetime
 import pytest
 
 from sxolar.api.arxiv import Author, Category, Entry, Identifier
-from sxolar.summary import Format, Summary
+from sxolar.summary import Format, Section
 
 
 class TestSummary:
@@ -71,8 +71,8 @@ class TestSummary:
 
     def test_init(self):
         """Test the summary class"""
-        smy = Summary("Test", [])
-        assert isinstance(smy, Summary)
+        smy = Section("Test", [])
+        assert isinstance(smy, Section)
         assert smy.name == "Test"
         assert smy.results == []
         assert smy.max_authors == 3
@@ -80,7 +80,7 @@ class TestSummary:
 
     def test_format_entry_plain(self, results):
         """Test the format_entry method"""
-        smy = Summary("TestPlain", results)
+        smy = Section("TestPlain", results)
         entry = smy.results[0]
         entry_str = smy._format_entry(entry, Format.Plain)
         assert isinstance(entry_str, str)
@@ -93,7 +93,7 @@ class TestSummary:
 
     def test_format_entry_html(self, results):
         """Test the format_entry method"""
-        smy = Summary("TestPlain", results)
+        smy = Section("TestPlain", results)
         entry = smy.results[0]
         entry_str = smy._format_entry(entry, Format.Html)
         assert isinstance(entry_str, str)
@@ -105,7 +105,7 @@ class TestSummary:
 
     def test_to_text(self, results):
         """Test the to_text method"""
-        smy = Summary("TestPlain", results)
+        smy = Section("TestPlain", results)
         text = smy.to_text()
         assert isinstance(text, str)
         assert text == (
@@ -123,7 +123,7 @@ class TestSummary:
 
     def test_to_html(self, results):
         """Test the to_html method"""
-        smy = Summary("TestHtml", results)
+        smy = Section("TestHtml", results)
         html = smy.to_html()
         assert isinstance(html, str)
         assert html == (
