@@ -35,7 +35,7 @@ results = query.search(max_results=5)
 # Display the search results
 for result in results:
     print(result.title)
-    print(result.authors)
+    print(result.author)
     print(result.abstract)
     print()
 ```
@@ -53,6 +53,7 @@ related to quantum computing that were authored by a specific author and publish
 Here is an example of a more complex query:
 
 ```python
+import datetime
 from sxolar import Title, Author
 
 # Create a query object with multiple search criteria
@@ -62,14 +63,14 @@ query &= (Author("John Doe") | Author("Jane Smith")).wrap()
 # Execute the query and display the top 5 results
 results = query.search(
     max_results=5,
-    min_date="2022-01-01",
-    max_date="2022-12-31",
+    min_date=datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC),
+    max_date=datetime.datetime(2022, 12, 31, tzinfo=datetime.UTC),
 )
 
 # Display the search results
 for result in results:
     print(result.title)
-    print(result.authors)
+    print(result.author)
     print(result.abstract)
     print()
 ```

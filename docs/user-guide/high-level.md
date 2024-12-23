@@ -64,8 +64,8 @@ query = Title('quantum computing')
 query &= (Author('John Doe') | Author('Jane Smith')).wrap()
 
 # Submit the search query and retrieve the results
-entries = query.search(min_date=datetime.datetime(2021, 1, 1), 
-                       max_date=datetime.datetime(2021, 12, 31),
+entries = query.search(min_date=datetime.datetime(2021, 1, 1, tzinfo=datetime.UTC), 
+                       max_date=datetime.datetime(2021, 12, 31, tzinfo=datetime.UTC),
                        max_results=5)
 
 for entry in entries:

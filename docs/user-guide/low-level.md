@@ -61,8 +61,8 @@ from sxolar.api.arxiv import query
 # Search for arXiv entries related to quantum computing that were published in 2021
 entries = query(
     title='quantum computing', 
-    min_date=datetime.datetime(2021, 1, 1),
-    max_date=datetime.datetime(2021, 12, 31),
+    min_date=datetime.datetime(2021, 1, 1, tzinfo=datetime.UTC),
+    max_date=datetime.datetime(2021, 12, 31, tzinfo=datetime.UTC),
     max_results=5,
 )
 
