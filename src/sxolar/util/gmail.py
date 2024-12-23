@@ -17,10 +17,12 @@ except KeyError:
 
 def send_email(
     subject: str,
-    to: str,
+    to: list[str],
     body: str,
+    from_email: str = EMAIL_SENDER,
     safe: bool = True,
     is_plain: bool = True,
+    app_password: str = EMAIL_APP_PASSWORD,
 ):
     """Send an email using Gmail.
 
@@ -31,18 +33,26 @@ def send_email(
             str, The email address to send the email to.
         body:
             str, The body of the email.
+        from_email:
+            str, default EMAIL_SENDER, the email address to send the email from.
+        safe:
+            bool, default True, whether to suppress exceptions when sending the email.
+        is_plain:
+            bool, default True, whether the email is plain text or html.
+        app_password:
+            str, default EMAIL_APP_PASSWORD, the app password for the Gmail account.
     """
-    if EMAIL_APP_PASSWORD is None:
+    if app_password is None:
         raise ValueError(
             f"Please set the {EMAIL_APP_PASSWORD_ENV_KEY} environment variable to "
-            f"your Gmail app password."
+            f"your Gmail app password or specify it as the app_password argument."
         )
 
     # Create a multipart message and set headers
     message = MIMEMultipart("alternative")
     message["Subject"] = subject
     message["From"] = EMAIL_SENDER
-    message["To"] = to
+    message["To"] = ", ".join(to)
 
     # Check if the email is plain text or html
     if is_plain:
@@ -70,7 +80,7 @@ def send_email(
         # Establish a secure session using starttls
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
-            server.login(EMAIL_SENDER, EMAIL_APP_PASSWORD)
+            server.login(from_email, app_password)
             server.send_message(message)
 
     except Exception as e:

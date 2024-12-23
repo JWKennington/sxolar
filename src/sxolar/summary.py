@@ -6,7 +6,7 @@ import enum
 from dataclasses import dataclass
 from typing import List, Optional
 
-from sxolar.api.arxiv import Entry
+from sxolar.api.arxiv import Entry, SortBy, SortOrder
 from sxolar.api.search import Query
 
 
@@ -49,6 +49,8 @@ class Section:
     max_authors: int = 3
     include_abstract: bool = False
     max_results: int = 50
+    sort_by: SortBy = SortBy.Relevance
+    sort_order: SortOrder = SortOrder.Descending
     trailing: Optional[int] = None
     trailing_unit: str = "days"
 
@@ -69,7 +71,12 @@ class Section:
         abstract = entry.summary if self.include_abstract else ""
 
         if format == Format.Plain:
-            return f"{title} [{entry.id}]\n" f"{authors}\n" f"{abstract}\n"
+            return (
+                f"{title} [{entry.id}]\n"
+                f"{authors}\n"
+                f"{abstract}\n"
+                f"{entry.id.link()}\n"
+            )
 
         if format == Format.Html:
             return (
@@ -88,6 +95,8 @@ class Section:
         kwargs = {
             "start": 0,
             "max_results": self.max_results,
+            "sort_by": self.sort_by,
+            "sort_order": self.sort_order,
         }
 
         # Add time filters if specified
