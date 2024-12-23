@@ -196,7 +196,7 @@ class Query:
             authors:
                 str, the name of the author, "First Last"
         """
-        authors = [Author(author) for author in authors]
+        authors = [Author(author).wrap() for author in authors]
         query = authors[0]
         if authors[1:]:
             query = query.join(*authors[1:], operator=LogicalOperator.OR)

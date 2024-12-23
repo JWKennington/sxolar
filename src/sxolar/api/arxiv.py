@@ -366,6 +366,10 @@ def get_and_parse(url: str, params: dict) -> List[Entry]:
     # Get the response
     response = SESSION.get(url, params=params)
 
+    # Check for failures
+    if not response.ok:
+        response.raise_for_status()
+
     # Parse the response securely into ElementTree
     root = SecureElementTree.fromstring(response.text)
 

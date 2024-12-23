@@ -61,7 +61,8 @@ class Config:
             # Create the sections for the summary
             _sections = []
             for section in sections:
-                _sections.append(Section.from_combo(**section))
+                _sec = Section.from_combo(**section)
+                _sections.append(_sec)
 
             # Create the summary
             self.summaries[name] = Summary(name=name, sections=_sections)
