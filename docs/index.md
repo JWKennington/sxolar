@@ -2,10 +2,13 @@
 
 The `sxolar` package is a collection of tools for working with arXiv data.
 It includes low-level and high-level interfaces for querying arXiv metadata,
-summarizing query results into digest formats, based on a configuration file.
+summarizing query results into digest formats, and optional control
+based on a configuration file.
 
-The tools are written in Python and are designed to be used in any python application. The tools are designed to be
-used in place of the `Arxiv API <https://arxiv.org/help/api/index>`, with a simpler interface and more features, including
+The tools are written in Python and are designed to be used in any python application.
+A command line interface is also provided for easy access to the tools from a shell.
+The core tools are designed to be used in place of the `Arxiv API <https://arxiv.org/help/api/index>`, 
+with a simpler interface and more features, including
 
 * Searching and downloading papers
 * Creating personalized search indices for easy repeated searches

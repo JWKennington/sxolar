@@ -244,7 +244,8 @@ class Entry:
         Returns:
             bool: True if the entry has any of the authors, False otherwise.
         """
-        return any(author.name in authors for author in self.author)
+        lower_authors = [author.lower().strip() for author in authors]
+        return any(author.name.lower().strip() in lower_authors for author in self.author)
 
 
 class SortBy(str, enum.Enum):
@@ -520,7 +521,7 @@ def format_search_query(
     return parse.quote(query, safe="/:&=")
 
 
-def _query(
+def execute(
     search_query: str = None,
     id_list: List[str] = None,
     start: int = 0,
@@ -664,7 +665,7 @@ def query(
         raise ValueError("No search query provided; cannot query the entire Arxiv.")
 
     # Query the API
-    return _query(
+    return execute(
         search_query=search_query,
         id_list=id_list,
         start=start,

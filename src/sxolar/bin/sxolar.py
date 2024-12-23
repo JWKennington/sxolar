@@ -131,6 +131,24 @@ def add_query_parser(subparsers: argparse._SubParsersAction) -> None:
         "configuration or in subsequent arguments.",
         required=False,
     )
+    # Filter authors argument, default false
+    query_parser.add_argument(
+        "--filter-authors",
+        action="store_true",
+        help="Filter the authors based on the query. Optional. If specified, "
+             "this will filter search results for exact author matches. When used,"
+             "it is required to use the --author argument. Further, "
+             "it is strongly advised to increase the max results to get more "
+             "accurate results.",
+        required=False,
+    )
+    # Add verbose argument
+    query_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print verbose output. Optional.",
+        required=False,
+    )
 
 
 def add_summary_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -210,6 +228,8 @@ def query(
     max_results: int = None,
     trailing: int = None,
     value: str = None,
+    filter_authors: bool = False,
+    verbose: bool = False,
 ) -> None:
     """Run a query based on the command line arguments."""
     # Build query object
@@ -224,13 +244,29 @@ def query(
             alls=alls,
         )
 
+        if filter_authors and authors:
+            if verbose:
+                print(f"Will filter results based on authors: {authors}")
+            query.filter_authors = authors
+
+    if verbose:
+        print(f"Query: {query.value}")
+
+    # Build optional kwargs
+    kwargs = {}
+    for k, v in {
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "max_results": max_results,
+        "trailing": trailing,
+    }.items():
+        if v is not None:
+            kwargs[k] = v
+
     section = Section(
         name="Query Results",
         query=query,
-        max_results=max_results,
-        trailing=trailing,
-        sort_by=sort_by,
-        sort_order=sort_order,
+        **kwargs,
     )
 
     # Run the query
@@ -328,6 +364,8 @@ def main():
             max_results=args.max_results,
             trailing=args.trailing,
             value=args.value,
+            filter_authors=args.filter_authors,
+            verbose=args.verbose,
         )
 
     # Summary command

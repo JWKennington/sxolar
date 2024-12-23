@@ -154,7 +154,7 @@ class Query:
         Returns:
             list: A list of dictionaries representing the search results
         """
-        results = arxiv._query(
+        results = arxiv.execute(
             self.value,
             id_list=None,
             start=start,

@@ -67,5 +67,5 @@ class TestConfig:
             == "Section 1: Topic A x Authors 1, 2 | Recent 2 Weeks"
         )
         assert str(summary.sections[0].query) == (
-            "((au:Author 1 OR au:Author 2) AND all:Topic A)"
+            "(((au:Author 1) OR (au:Author 2)) AND all:Topic A)"
         )
